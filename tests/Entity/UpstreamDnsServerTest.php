@@ -176,7 +176,7 @@ class UpstreamDnsServerTest extends TestCase
         $this->assertSame('8.8.8.8', $array['host']);
         $this->assertSame(53, $array['port']);
         $this->assertSame('*.example.com', $array['pattern']);
-        $this->assertSame(MatchStrategy::SUFFIX, $array['strategy']);
+        $this->assertSame('suffix', $array['strategy']);
     }
     
     public function testRetrieveApiArray(): void

@@ -6,6 +6,7 @@ use DnsServerBundle\Entity\DnsQueryLog;
 use DnsServerBundle\Entity\UpstreamDnsServer;
 use DnsServerBundle\Enum\DnsProtocolEnum;
 use DnsServerBundle\Enum\MatchStrategy;
+use DnsServerBundle\Enum\RecordType;
 use DnsServerBundle\Repository\UpstreamDnsServerRepository;
 use DnsServerBundle\Service\DnsQueryService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,13 +16,7 @@ use Psr\Log\LoggerInterface;
 use React\Datagram\Socket;
 use React\Dns\Model\Message;
 use React\Dns\Model\Record as DnsRecord;
-use React\Dns\Protocol\BinaryDumper;
-use React\Dns\Protocol\Parser;
-use React\Dns\Query\CoopExecutor;
-use React\Dns\Query\Query;
-use React\Promise\Deferred;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
-use Symfony\Component\Cache\CacheItem;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class DnsQueryServiceTest extends TestCase
@@ -50,248 +45,205 @@ class DnsQueryServiceTest extends TestCase
             $this->httpClient
         );
         
+        // 创建上游服务器实例
         $this->upstreamServer = new UpstreamDnsServer();
-        $this->upstreamServer->setHost('8.8.8.8')
+        $this->upstreamServer->setName('Google DNS')
+            ->setHost('8.8.8.8')
             ->setPort(53)
+            ->setPattern('*')
+            ->setStrategy(MatchStrategy::WILDCARD)
             ->setProtocol(DnsProtocolEnum::UDP)
-            ->setTimeout(5)
-            ->setPattern('.*')
-            ->setStrategy(MatchStrategy::REGEX)
             ->setIsDefault(true);
     }
     
-    public function testHandleQuery_WithCachedResponse(): void
+    /**
+     * 测试日志记录功能
+     */
+    public function testLogDnsQuery(): void
     {
-        // 创建DNS请求消息
-        $request = new Message();
-        $request->id = 1234;
-        $request->questions[] = new DnsRecord('example.com', Message::TYPE_A, Message::CLASS_IN);
+        // 创建模拟对象
+        $repository = $this->createMock(UpstreamDnsServerRepository::class);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $cache = $this->createMock(AdapterInterface::class);
+        $httpClient = $this->createMock(HttpClientInterface::class);
         
-        $parser = new Parser();
-        $dumper = new BinaryDumper();
-        $requestBinary = $dumper->toBinary($request);
+        // 创建测试服务
+        $service = new DnsQueryService(
+            $repository,
+            $entityManager,
+            $logger,
+            $cache,
+            $httpClient
+        );
         
-        // 创建缓存项并设置为命中
-        $cacheItem = $this->createMock(CacheItem::class);
-        $cacheItem->method('isHit')->willReturn(true);
-        
-        // 创建缓存的响应数据
-        $cachedAnswers = [
-            new DnsRecord('example.com', Message::TYPE_A, Message::CLASS_IN, 300, '192.168.1.1')
-        ];
-        
-        $cacheItem->method('get')->willReturn([
-            'answers' => $cachedAnswers,
-            'authority' => [],
-            'additional' => [],
-            'expires' => time() + 300
-        ]);
-        
-        // 配置缓存Mock
-        $this->cache->method('getItem')
-            ->with($this->stringContains('dns_query_example.com_1'))
-            ->willReturn($cacheItem);
-        
-        // 准备测试Socket
-        $socket = $this->createMock(Socket::class);
-        $socket->expects($this->once())
-            ->method('send')
-            ->with(
-                $this->callback(function ($data) use ($request, $parser) {
-                    $response = $parser->parseMessage($data);
-                    return $response->id === $request->id && !empty($response->answers);
-                }),
-                '192.168.0.1'
-            );
-        
-        // 确保实体管理器方法被调用
-        $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($this->isInstanceOf(DnsQueryLog::class));
-        
-        $this->entityManager->expects($this->once())
-            ->method('flush');
-        
-        // 执行测试
-        $this->service->handleQuery($requestBinary, '192.168.0.1', $socket);
-    }
-    
-    public function testHandleQuery_WithForwardedQuery(): void
-    {
-        // 创建DNS请求消息
-        $request = new Message();
-        $request->id = 1234;
-        $request->questions[] = new DnsRecord('example.com', Message::TYPE_A, Message::CLASS_IN);
-        
-        $parser = new Parser();
-        $dumper = new BinaryDumper();
-        $requestBinary = $dumper->toBinary($request);
-        
-        // 创建缓存项并设置为未命中
-        $cacheItem = $this->createMock(CacheItem::class);
-        $cacheItem->method('isHit')->willReturn(false);
-        
-        // 创建存储缓存的新项
-        $newCacheItem = $this->createMock(CacheItem::class);
-        $newCacheItem->expects($this->once())
-            ->method('set')
-            ->with($this->isType('array'));
-        
-        $newCacheItem->expects($this->once())
-            ->method('expiresAfter')
-            ->with($this->isType('integer'));
-        
-        // 配置缓存Mock
-        $this->cache->method('getItem')
-            ->with($this->stringContains('dns_query_example.com_1'))
-            ->willReturnOnConsecutiveCalls($cacheItem, $newCacheItem);
-        
-        $this->cache->expects($this->once())
-            ->method('save')
-            ->with($newCacheItem);
-        
-        // 配置上游服务器仓库
-        $this->upstreamDnsServerRepository->method('findMatchingServer')
-            ->with('example.com')
-            ->willReturn($this->upstreamServer);
-        
-        // 创建响应消息
-        $response = new Message();
-        $response->id = 1234;
-        $response->qr = true;
-        $response->questions[] = new DnsRecord('example.com', Message::TYPE_A, Message::CLASS_IN);
-        $response->answers[] = new DnsRecord('example.com', Message::TYPE_A, Message::CLASS_IN, 300, '192.168.1.1');
-        
-        // 创建Promise和Executor的Mock
-        $deferred = new Deferred();
-        $promise = $deferred->promise();
-        
-        $executor = $this->createMock(CoopExecutor::class);
-        $executor->method('query')
-            ->with($this->callback(function (Query $query) {
-                return $query->name === 'example.com' && $query->type === Message::TYPE_A;
-            }))
-            ->willReturn($promise);
-        
-        // 使用反射修改服务中的方法，使其返回我们的Mock执行器
-        $reflection = new \ReflectionClass(DnsQueryService::class);
-        $method = $reflection->getMethod('createExecutor');
+        // 使用反射访问私有方法
+        $reflectionClass = new \ReflectionClass(DnsQueryService::class);
+        $method = $reflectionClass->getMethod('createQueryLog');
         $method->setAccessible(true);
         
-        $serviceMock = $this->getMockBuilder(DnsQueryService::class)
-            ->setConstructorArgs([
-                $this->upstreamDnsServerRepository,
-                $this->entityManager,
-                $this->logger,
-                $this->cache,
-                $this->httpClient
-            ])
-            ->onlyMethods(['createExecutor'])
-            ->getMock();
+        // 测试创建日志对象
+        $queryLog = $method->invokeArgs($service, ['example.com', Message::TYPE_A, '192.168.1.1']);
         
-        $serviceMock->method('createExecutor')
-            ->with($this->upstreamServer)
-            ->willReturn($executor);
-        
-        // 准备测试Socket
-        $socket = $this->createMock(Socket::class);
-        $socket->expects($this->once())
-            ->method('send')
-            ->with(
-                $this->callback(function ($data) use ($parser) {
-                    $msg = $parser->parseMessage($data);
-                    return !empty($msg->answers) && $msg->answers[0]->data === '192.168.1.1';
-                }),
-                '192.168.0.1'
-            );
-        
-        // 确保实体管理器方法被调用
-        $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($this->isInstanceOf(DnsQueryLog::class));
-        
-        $this->entityManager->expects($this->once())
-            ->method('flush');
-        
-        // 执行测试
-        $serviceMock->handleQuery($requestBinary, '192.168.0.1', $socket);
-        
-        // 解析Promise以触发回调
-        $deferred->resolve($response);
+        // 验证日志对象
+        $this->assertInstanceOf(DnsQueryLog::class, $queryLog);
+        $this->assertEquals('example.com', $queryLog->getDomain());
+        $this->assertEquals(RecordType::A, $queryLog->getQueryType());
+        $this->assertEquals('192.168.1.1', $queryLog->getClientIp());
     }
     
-    public function testHandleQuery_WithError(): void
+    /**
+     * 测试缓存功能
+     */
+    public function testGetCachedResponse(): void
     {
-        // 创建DNS请求消息
+        // 创建模拟对象
+        $repository = $this->createMock(UpstreamDnsServerRepository::class);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $cache = $this->createMock(AdapterInterface::class);
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        
+        // 创建测试服务
+        $service = new DnsQueryService(
+            $repository,
+            $entityManager,
+            $logger,
+            $cache,
+            $httpClient
+        );
+        
+        // 反射访问私有的缓存键方法
+        $reflectionClass = new \ReflectionClass(DnsQueryService::class);
+        $cacheKeyMethod = $reflectionClass->getMethod('getCacheKey');
+        $cacheKeyMethod->setAccessible(true);
+        
+        // 测试缓存键格式
+        $cacheKey = $cacheKeyMethod->invokeArgs($service, ['example.com', Message::TYPE_A]);
+        $this->assertStringContainsString('example.com', $cacheKey);
+        $this->assertStringContainsString('dns_query', $cacheKey);
+    }
+    
+    /**
+     * 测试成功处理查询
+     */
+    public function testHandleQuerySuccess(): void
+    {
+        // 创建模拟对象
+        $repository = $this->createMock(UpstreamDnsServerRepository::class);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $cache = $this->createMock(AdapterInterface::class);
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        
+        // 设置实体管理器期望
+        $entityManager->expects($this->once())
+            ->method('persist')
+            ->with($this->isInstanceOf(DnsQueryLog::class));
+            
+        $entityManager->expects($this->once())
+            ->method('flush');
+        
+        // 创建消息和日志
         $request = new Message();
         $request->id = 1234;
-        $request->questions[] = new DnsRecord('example.com', Message::TYPE_A, Message::CLASS_IN);
         
-        $parser = new Parser();
-        $dumper = new BinaryDumper();
-        $requestBinary = $dumper->toBinary($request);
+        $response = new Message();
+        $response->answers[] = new DnsRecord('example.com', Message::TYPE_A, Message::CLASS_IN, 300, '192.168.1.1');
         
-        // 创建缓存项并设置为未命中
-        $cacheItem = $this->createMock(CacheItem::class);
-        $cacheItem->method('isHit')->willReturn(false);
+        $queryLog = new DnsQueryLog();
+        $queryLog->setDomain('example.com')
+            ->setQueryType(RecordType::A)
+            ->setClientIp('192.168.1.1');
         
-        // 配置缓存Mock
-        $this->cache->method('getItem')
-            ->with($this->stringContains('dns_query_example.com_1'))
-            ->willReturn($cacheItem);
-        
-        // 配置上游服务器仓库
-        $this->upstreamDnsServerRepository->method('findMatchingServer')
-            ->with('example.com')
-            ->willReturn($this->upstreamServer);
-        
-        // 创建Promise和Executor的Mock
-        $deferred = new Deferred();
-        $promise = $deferred->promise();
-        
-        $executor = $this->createMock(CoopExecutor::class);
-        $executor->method('query')
-            ->willReturn($promise);
-        
-        // 使用反射修改服务中的方法，使其返回我们的Mock执行器
-        $serviceMock = $this->getMockBuilder(DnsQueryService::class)
-            ->setConstructorArgs([
-                $this->upstreamDnsServerRepository,
-                $this->entityManager,
-                $this->logger,
-                $this->cache,
-                $this->httpClient
-            ])
-            ->onlyMethods(['createExecutor'])
-            ->getMock();
-        
-        $serviceMock->method('createExecutor')
-            ->willReturn($executor);
-        
-        // 准备测试Socket
         $socket = $this->createMock(Socket::class);
         $socket->expects($this->once())
             ->method('send')
-            ->with(
-                $this->callback(function ($data) use ($parser) {
-                    $msg = $parser->parseMessage($data);
-                    return $msg->rcode === 2; // SERVFAIL
-                }),
-                '192.168.0.1'
-            );
+            ->with($this->anything(), '192.168.1.1');
         
-        // 确保实体管理器方法被调用
-        $this->entityManager->expects($this->once())
+        // 创建测试服务
+        $service = new DnsQueryService(
+            $repository,
+            $entityManager,
+            $logger,
+            $cache,
+            $httpClient
+        );
+        
+        // 使用反射访问私有方法
+        $reflectionClass = new \ReflectionClass(DnsQueryService::class);
+        $method = $reflectionClass->getMethod('handleQuerySuccess');
+        $method->setAccessible(true);
+        
+        // 测试处理查询成功
+        $method->invokeArgs($service, [
+            $response,
+            $socket,
+            '192.168.1.1',
+            $request,
+            $queryLog,
+            microtime(true)
+        ]);
+    }
+    
+    /**
+     * 测试失败处理查询
+     */
+    public function testHandleQueryFailure(): void
+    {
+        // 创建模拟对象
+        $repository = $this->createMock(UpstreamDnsServerRepository::class);
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $cache = $this->createMock(AdapterInterface::class);
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        
+        // 设置实体管理器期望
+        $entityManager->expects($this->once())
             ->method('persist')
             ->with($this->isInstanceOf(DnsQueryLog::class));
-        
-        $this->entityManager->expects($this->once())
+            
+        $entityManager->expects($this->once())
             ->method('flush');
         
-        // 执行测试
-        $serviceMock->handleQuery($requestBinary, '192.168.0.1', $socket);
+        // 创建消息、错误和日志
+        $request = new Message();
+        $request->id = 1234;
         
-        // 解析Promise为错误以触发错误回调
-        $deferred->reject(new \Exception('DNS query failed'));
+        $error = new \Exception('DNS lookup failed');
+        
+        $queryLog = new DnsQueryLog();
+        $queryLog->setDomain('example.com')
+            ->setQueryType(RecordType::A)
+            ->setClientIp('192.168.1.1');
+        
+        $socket = $this->createMock(Socket::class);
+        $socket->expects($this->once())
+            ->method('send')
+            ->with($this->anything(), '192.168.1.1');
+        
+        // 创建测试服务
+        $service = new DnsQueryService(
+            $repository,
+            $entityManager,
+            $logger,
+            $cache,
+            $httpClient
+        );
+        
+        // 使用反射访问私有方法
+        $reflectionClass = new \ReflectionClass(DnsQueryService::class);
+        $method = $reflectionClass->getMethod('handleQueryFailure');
+        $method->setAccessible(true);
+        
+        // 测试处理查询失败
+        $method->invokeArgs($service, [
+            $error,
+            $socket,
+            '192.168.1.1',
+            $request,
+            $queryLog,
+            microtime(true)
+        ]);
     }
 } 

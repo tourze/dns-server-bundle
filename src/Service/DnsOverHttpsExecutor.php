@@ -37,10 +37,12 @@ class DnsOverHttpsExecutor implements ExecutorInterface
                     $query->type,
                     Message::CLASS_IN,
                     0,
-                    []
+                    null
                 )
             ];
 
+            $url = 'https://' . $this->server->getHost() . '/dns-query';
+            
             $options = [
                 'headers' => [
                     'Accept' => 'application/dns-message',
@@ -52,8 +54,12 @@ class DnsOverHttpsExecutor implements ExecutorInterface
                 'verify_host' => $this->server->isVerifyCert(),
             ];
 
-            $response = $this->httpClient->request('POST', $this->server->getHost(), $options);
-
+            $response = $this->httpClient->request('POST', $url, $options);
+            
+            if ($response->getStatusCode() !== 200) {
+                return reject(new QueryFailure('DoH query failed: HTTP status ' . $response->getStatusCode()));
+            }
+            
             return resolve($response->getContent());
         } catch (\Throwable $e) {
             return reject(new QueryFailure('DoH query failed: ' . $e->getMessage()));

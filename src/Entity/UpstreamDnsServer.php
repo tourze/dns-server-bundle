@@ -336,6 +336,17 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->updatedFromIp;
     }
 
+    /**
+     * 返回时间戳相关的数组
+     */
+    private function retrieveTimestampArray(): array
+    {
+        return [
+            'createdFromIp' => $this->getCreatedFromIp(),
+            'updatedFromIp' => $this->getUpdatedFromIp(),
+        ];
+    }
+
     public function retrievePlainArray(): array
     {
         return [

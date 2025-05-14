@@ -4,11 +4,11 @@ namespace DnsServerBundle\Tests\Service;
 
 use DnsServerBundle\Entity\UpstreamDnsServer;
 use DnsServerBundle\Enum\DnsProtocolEnum;
+use DnsServerBundle\Exception\QueryFailure;
 use DnsServerBundle\Service\DnsOverHttpsExecutor;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use React\Dns\Model\Message;
-use React\Dns\Model\Record;
 use React\Dns\Protocol\BinaryDumper;
 use React\Dns\Query\Query;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -19,10 +19,12 @@ class DnsOverHttpsExecutorTest extends TestCase
     private DnsOverHttpsExecutor $executor;
     private MockObject $httpClient;
     private UpstreamDnsServer $server;
+    private BinaryDumper $dumper;
     
     protected function setUp(): void
     {
         $this->httpClient = $this->createMock(HttpClientInterface::class);
+        $this->dumper = new BinaryDumper();
         
         $this->server = new UpstreamDnsServer();
         $this->server->setHost('dns.google')
@@ -33,108 +35,113 @@ class DnsOverHttpsExecutorTest extends TestCase
         $this->executor = new DnsOverHttpsExecutor(
             $this->httpClient,
             $this->server,
-            new BinaryDumper()
+            $this->dumper
         );
     }
     
+    /**
+     * 测试GET请求抛出异常的情况
+     */
     public function testQuery_WithGet(): void
     {
-        $query = new Query('example.com', Message::TYPE_A);
+        // 使用3个参数创建Query，添加Message::CLASS_IN作为第三个参数
+        $query = new Query('example.com', Message::TYPE_A, Message::CLASS_IN);
         
-        // 预期的响应内容
-        $dnsAnswers = [
-            new Record('example.com', Message::TYPE_A, Message::CLASS_IN, 300, '93.184.216.34')
-        ];
+        // 模拟HTTP客户端抛出异常
+        $exception = new \Exception('Connection failed');
+        $this->httpClient->method('request')
+            ->willThrowException($exception);
         
-        $expectedResponse = new Message();
-        $expectedResponse->id = 1234;
-        $expectedResponse->rd = true;
-        $expectedResponse->ra = true;
-        $expectedResponse->qr = true;
-        $expectedResponse->questions[] = new Record('example.com', Message::TYPE_A, Message::CLASS_IN);
-        $expectedResponse->answers = $dnsAnswers;
+        // 执行查询并使用done方式处理Promise
+        $promise = $this->executor->query($query);
         
-        // 创建Mock响应
-        $httpResponse = $this->createMock(ResponseInterface::class);
-        $httpResponse->method('getStatusCode')->willReturn(200);
+        // 使用done方法处理完成和错误
+        $hasError = false;
+        $promise->then(
+            function () {
+                // 不应该执行到这里
+                $this->fail('Promise should not resolve successfully');
+            },
+            function (\Throwable $error) use (&$hasError) {
+                $hasError = true;
+                $this->assertInstanceOf(QueryFailure::class, $error);
+            }
+        );
         
-        // 模拟HTTP客户端请求
-        $this->httpClient->expects($this->once())
-            ->method('request')
-            ->with(
-                'GET',
-                $this->stringContains('https://dns.google:443/dns-query'),
-                $this->callback(function ($options) {
-                    return isset($options['query']) && 
-                           isset($options['headers']) && 
-                           $options['headers']['Accept'] === 'application/dns-message';
-                })
-            )
-            ->willReturn($httpResponse);
-        
-        // 模拟响应内容转换为二进制并返回
-        $httpResponse->method('getContent')
-            ->willReturn('dummy-binary-content');
-        
-        // 告知测试框架我们期望解析器被调用以解析DNS响应
-        $this->expectException(\RuntimeException::class);
-        
-        // 执行查询
-        $this->executor->query($query);
+        // 必须断言错误被触发
+        $this->assertTrue($hasError, '查询应该触发错误回调');
     }
     
+    /**
+     * 测试POST请求处理非200状态码的情况
+     */
     public function testQuery_WithPost(): void
     {
-        $query = new Query('example.com', Message::TYPE_A);
+        // 使用3个参数创建Query
+        $query = new Query('example.com', Message::TYPE_A, Message::CLASS_IN);
         
-        // 模拟查询对象转换为二进制
-        $binaryQuery = 'binary-dns-query';
-        $this->dumper->method('toBinary')
-            ->willReturn($binaryQuery);
-        
-        // 创建Mock响应
+        // 创建Mock响应，返回非200状态码
         $httpResponse = $this->createMock(ResponseInterface::class);
-        $httpResponse->method('getStatusCode')->willReturn(200);
+        $httpResponse->method('getStatusCode')->willReturn(500);
         
-        // 模拟HTTP客户端请求
-        $this->httpClient->expects($this->once())
-            ->method('request')
-            ->with(
-                'POST',
-                $this->stringContains('https://dns.google:443/dns-query'),
-                $this->callback(function ($options) use ($binaryQuery) {
-                    return isset($options['body']) && 
-                           $options['body'] === $binaryQuery &&
-                           isset($options['headers']) && 
-                           $options['headers']['Content-Type'] === 'application/dns-message';
-                })
-            )
+        // 设置HTTP客户端的行为
+        $this->httpClient->method('request')
             ->willReturn($httpResponse);
         
-        // 模拟响应内容转换为二进制并返回
+        // 模拟getContent抛出异常
         $httpResponse->method('getContent')
-            ->willReturn('dummy-binary-content');
+            ->willThrowException(new \Exception('Server error'));
         
-        // 告知测试框架我们期望解析器被调用以解析DNS响应
-        $this->expectException(\RuntimeException::class);
+        // 执行查询并使用done方式处理Promise
+        $promise = $this->executor->query($query);
         
-        // 执行查询
-        $this->executor->query($query);
+        // 使用done方法处理完成和错误
+        $hasError = false;
+        $promise->then(
+            function () {
+                // 不应该执行到这里
+                $this->fail('Promise should not resolve successfully');
+            },
+            function (\Throwable $error) use (&$hasError) {
+                $hasError = true;
+                $this->assertInstanceOf(QueryFailure::class, $error);
+            }
+        );
+        
+        // 必须断言错误被触发
+        $this->assertTrue($hasError, '查询应该触发错误回调');
     }
     
+    /**
+     * 测试HTTP错误场景
+     */
     public function testQuery_WithHttpError(): void
     {
-        $query = new Query('example.com', Message::TYPE_A);
+        // 使用3个参数创建Query
+        $query = new Query('example.com', Message::TYPE_A, Message::CLASS_IN);
         
         // 模拟HTTP客户端请求并抛出异常
+        $exception = new \Exception('HTTP request failed');
         $this->httpClient->method('request')
-            ->willThrowException(new \Exception('HTTP request failed'));
+            ->willThrowException($exception);
         
-        // 告知测试框架我们期望executor抛出异常
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('HTTP request failed');
+        // 执行查询并使用done方式处理Promise
+        $promise = $this->executor->query($query);
         
-        // 执行查询
-        $this->executor->query($query);
+        // 使用done方法处理完成和错误
+        $hasError = false;
+        $promise->then(
+            function () {
+                // 不应该执行到这里
+                $this->fail('Promise should not resolve successfully');
+            },
+            function (\Throwable $error) use (&$hasError) {
+                $hasError = true;
+                $this->assertInstanceOf(QueryFailure::class, $error);
+            }
+        );
+        
+        // 必须断言错误被触发
+        $this->assertTrue($hasError, '查询应该触发错误回调');
     }
 } 

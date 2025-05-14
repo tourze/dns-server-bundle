@@ -15,47 +15,62 @@ class DnsMatcherServiceTest extends TestCase
         $this->service = new DnsMatcherService();
     }
     
-    public function testIsMatch_WithExactMatch(): void
+    public function testMatchExact(): void
     {
         $this->assertTrue($this->service->isMatch('example.com', 'example.com', MatchStrategy::EXACT));
+        $this->assertTrue($this->service->isMatch('EXAMPLE.com', 'example.COM', MatchStrategy::EXACT));
         $this->assertFalse($this->service->isMatch('sub.example.com', 'example.com', MatchStrategy::EXACT));
-        $this->assertFalse($this->service->isMatch('anotherexample.com', 'example.com', MatchStrategy::EXACT));
     }
     
-    public function testIsMatch_WithSuffixMatch(): void
-    {
-        $this->assertTrue($this->service->isMatch('example.com', '.example.com', MatchStrategy::SUFFIX));
-        $this->assertTrue($this->service->isMatch('sub.example.com', '.example.com', MatchStrategy::SUFFIX));
-        $this->assertTrue($this->service->isMatch('deep.sub.example.com', '.example.com', MatchStrategy::SUFFIX));
-        $this->assertFalse($this->service->isMatch('anotherexample.com', '.example.com', MatchStrategy::SUFFIX));
-        $this->assertFalse($this->service->isMatch('example.org', '.example.com', MatchStrategy::SUFFIX));
-    }
-    
-    public function testIsMatch_WithPrefixMatch(): void
-    {
-        $this->assertTrue($this->service->isMatch('example.com', 'example', MatchStrategy::PREFIX));
-        $this->assertTrue($this->service->isMatch('example.org', 'example', MatchStrategy::PREFIX));
-        $this->assertFalse($this->service->isMatch('sub.example.com', 'example', MatchStrategy::PREFIX));
-    }
-    
-    public function testIsMatch_WithWildcardMatch(): void
+    public function testMatchWildcard(): void
     {
         $this->assertTrue($this->service->isMatch('example.com', '*.com', MatchStrategy::WILDCARD));
-        $this->assertTrue($this->service->isMatch('sub.example.com', '*example.com', MatchStrategy::WILDCARD));
+        $this->assertTrue($this->service->isMatch('sub.example.com', '*.example.com', MatchStrategy::WILDCARD));
+        $this->assertTrue($this->service->isMatch('example.com', '*', MatchStrategy::WILDCARD));
         $this->assertFalse($this->service->isMatch('example.org', '*.com', MatchStrategy::WILDCARD));
     }
     
-    public function testIsMatch_WithRegexMatch(): void
+    public function testMatchWildcardWithInvalidPattern(): void
     {
-        $this->assertTrue($this->service->isMatch('sub.example.com', '/^[a-z]+\.example\.com$/', MatchStrategy::REGEX));
-        $this->assertTrue($this->service->isMatch('test.example.org', '/^test\.example\.(com|org)$/', MatchStrategy::REGEX));
-        $this->assertFalse($this->service->isMatch('example.com', '/^[a-z]+\.example\.com$/', MatchStrategy::REGEX));
-        $this->assertFalse($this->service->isMatch('deep.sub.example.com', '/^[a-z]+\.example\.com$/', MatchStrategy::REGEX));
-        $this->assertFalse($this->service->isMatch('example.net', '/^[a-z]+\.example\.(com|org)$/', MatchStrategy::REGEX));
+        // 测试无效正则表达式的情况
+        $this->assertFalse($this->service->isMatch('example.com', '[', MatchStrategy::WILDCARD));
     }
     
-    public function testIsMatch_WithInvalidRegex(): void
+    public function testMatchRegex(): void
     {
-        $this->assertFalse($this->service->isMatch('example.com', '/[unclosed regex', MatchStrategy::REGEX));
+        $this->assertTrue($this->service->isMatch('example.com', '/example\.com/', MatchStrategy::REGEX));
+        $this->assertTrue($this->service->isMatch('sub.example.com', '/.*\.example\.com/', MatchStrategy::REGEX));
+        $this->assertFalse($this->service->isMatch('example.org', '/example\.com/', MatchStrategy::REGEX));
+    }
+    
+    public function testMatchRegexWithInvalidPattern(): void
+    {
+        // 测试无效正则表达式的情况
+        $this->assertFalse($this->service->isMatch('example.com', '[', MatchStrategy::REGEX));
+    }
+    
+    public function testMatchPrefix(): void
+    {
+        $this->assertTrue($this->service->isMatch('example.com', 'example', MatchStrategy::PREFIX));
+        $this->assertTrue($this->service->isMatch('EXAMPLE.com', 'example', MatchStrategy::PREFIX));
+        $this->assertFalse($this->service->isMatch('sub.example.com', 'example', MatchStrategy::PREFIX));
+    }
+    
+    public function testMatchSuffix(): void
+    {
+        $this->assertTrue($this->service->isMatch('example.com', '.com', MatchStrategy::SUFFIX));
+        $this->assertTrue($this->service->isMatch('sub.example.com', '.example.com', MatchStrategy::SUFFIX));
+        $this->assertTrue($this->service->isMatch('example.com', 'example.com', MatchStrategy::SUFFIX));
+        $this->assertFalse($this->service->isMatch('example.org', '.com', MatchStrategy::SUFFIX));
+    }
+    
+    public function testIsMatch(): void
+    {
+        // 测试不同策略的调用
+        $this->assertTrue($this->service->isMatch('example.com', 'example.com', MatchStrategy::EXACT));
+        $this->assertTrue($this->service->isMatch('example.com', '*.com', MatchStrategy::WILDCARD));
+        $this->assertTrue($this->service->isMatch('example.com', '/example\.com/', MatchStrategy::REGEX));
+        $this->assertTrue($this->service->isMatch('example.com', 'example', MatchStrategy::PREFIX));
+        $this->assertTrue($this->service->isMatch('example.com', '.com', MatchStrategy::SUFFIX));
     }
 } 

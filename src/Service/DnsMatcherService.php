@@ -26,13 +26,31 @@ class DnsMatcherService
 
     private function matchWildcard(string $domain, string $pattern): bool
     {
-        $pattern = str_replace(['*', '.'], ['.*', '\.'], $pattern);
-        return (bool)preg_match('/^' . $pattern . '$/i', $domain);
+        // 将通配符模式转换为正则表达式
+        // 首先转义点符号
+        $regexPattern = str_replace('.', '\.', $pattern);
+        // 将星号转换为正则通配符
+        $regexPattern = str_replace('*', '.*', $regexPattern);
+        // 构建完整正则表达式
+        $regexPattern = '/^' . $regexPattern . '$/i';
+        
+        // 使用正则匹配域名 - 安全处理无效模式
+        try {
+            return (bool)preg_match($regexPattern, $domain);
+        } catch (\Throwable $e) {
+            // 正则表达式异常情况
+            return false;
+        }
     }
 
     private function matchRegex(string $domain, string $pattern): bool
     {
-        return (bool)@preg_match($pattern, $domain);
+        // 安全处理无效正则表达式
+        try {
+            return (bool)preg_match($pattern, $domain);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     private function matchPrefix(string $domain, string $pattern): bool
@@ -42,6 +60,17 @@ class DnsMatcherService
 
     private function matchSuffix(string $domain, string $pattern): bool
     {
-        return str_ends_with(strtolower($domain), strtolower($pattern));
+        $domainLower = strtolower($domain);
+        $patternLower = strtolower($pattern);
+        
+        // 处理点开头的模式 (.example.com)
+        if (str_starts_with($patternLower, '.')) {
+            // 直接检查域名是否以模式结尾（包括点）
+            return $domainLower === substr($patternLower, 1) || 
+                   str_ends_with($domainLower, $patternLower);
+        }
+        
+        // 普通后缀匹配
+        return str_ends_with($domainLower, $patternLower);
     }
 }
