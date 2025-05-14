@@ -1,0 +1,14 @@
+services:
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+  DnsServerBundle\Command\:
+    resource: '../../Command/'
+  DnsServerBundle\Controller\:
+    resource: '../../Controller/'
+  DnsServerBundle\Repository\:
+    resource: '../../Repository/'
+  DnsServerBundle\Service\:
+    resource: '../../Service/'
