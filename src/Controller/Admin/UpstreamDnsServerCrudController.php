@@ -12,11 +12,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\JsonField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\BooleanFilter;
@@ -97,7 +97,7 @@ class UpstreamDnsServerCrudController extends AbstractCrudController
             ->hideOnIndex();
 
         // 自定义应答
-        yield JsonField::new('customAnswers', '自定义应答IP列表')
+        yield ArrayField::new('customAnswers', '自定义应答IP列表')
             ->hideOnIndex()
             ->setHelp('格式为 JSON 数组，例如：["1.1.1.1", "8.8.8.8"]');
             

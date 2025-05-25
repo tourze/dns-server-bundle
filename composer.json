@@ -5,6 +5,8 @@
   "license": "MIT",
   "require": {
     "php": "^8.1",
+    "ext-filter": "*",
+    "ext-mbstring": "*",
     "doctrine/dbal": "^4.0",
     "doctrine/doctrine-bundle": "^2.13",
     "doctrine/orm": "^3.0",
@@ -13,7 +15,9 @@
     "knplabs/knp-menu": "^3.7",
     "psr/log": "^3|^2|^1",
     "react/datagram": "^1.9",
+    "react/dns": "^1.13",
     "react/event-loop": "^1.5",
+    "react/promise": "^3.2",
     "spatie/dns": "^2.0",
     "symfony/cache": "^6.4",
     "symfony/config": "^6.4",
