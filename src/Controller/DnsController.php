@@ -71,7 +71,7 @@ class DnsController extends AbstractController
                     $response->answers
                 ),
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->json(['Status' => 2]); // SERVFAIL
         }
     }
