@@ -118,8 +118,6 @@ class DataAbstractTest extends TestCase
         
         $json = json_encode($data);
         $decoded = json_decode($json, true);
-        
-        $this->assertIsArray($decoded);
         $this->assertArrayHasKey('target', $decoded);
         $this->assertArrayHasKey('priority', $decoded);
     }

@@ -243,8 +243,6 @@ class DNSRecordCollectionTest extends TestCase
         $this->collection[] = $record;
         
         $array = $this->collection->toArray();
-        
-        $this->assertIsArray($array);
         $this->assertCount(1, $array);
         $this->assertInstanceOf(DNSRecord::class, $array[0]);
     }

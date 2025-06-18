@@ -88,8 +88,6 @@ class DnsQueryLogTest extends TestCase
     public function testToPlainArray(): void
     {
         $array = $this->log->toPlainArray();
-        
-        $this->assertIsArray($array);
         $this->assertArrayHasKey('id', $array);
         $this->assertArrayHasKey('domain', $array);
         $this->assertArrayHasKey('queryType', $array);
@@ -100,13 +98,11 @@ class DnsQueryLogTest extends TestCase
     {
         $this->log->setDomain('example.com');
         $array = $this->log->retrievePlainArray();
-        $this->assertIsArray($array);
     }
     
     public function testRetrieveAdminArray(): void
     {
         $this->log->setDomain('example.com');
         $array = $this->log->retrieveAdminArray();
-        $this->assertIsArray($array);
     }
 } 

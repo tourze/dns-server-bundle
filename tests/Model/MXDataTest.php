@@ -37,8 +37,6 @@ class MXDataTest extends TestCase
         
         $mxData = new MXData($hostname, $priority);
         $array = $mxData->toArray();
-        
-        $this->assertIsArray($array);
         $this->assertArrayHasKey('target', $array);
         $this->assertArrayHasKey('priority', $array);
         $this->assertSame((string)$hostname, $array['target']);
@@ -69,8 +67,6 @@ class MXDataTest extends TestCase
         
         $json = json_encode($mxData);
         $decoded = json_decode($json, true);
-        
-        $this->assertIsArray($decoded);
         $this->assertArrayHasKey('target', $decoded);
         $this->assertArrayHasKey('priority', $decoded);
         $this->assertSame((string)$hostname, $decoded['target']);

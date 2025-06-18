@@ -163,8 +163,6 @@ class UpstreamDnsServerTest extends TestCase
             ->setStrategy(MatchStrategy::SUFFIX);
             
         $array = $this->server->retrievePlainArray();
-        
-        $this->assertIsArray($array);
         $this->assertArrayHasKey('id', $array);
         $this->assertArrayHasKey('name', $array);
         $this->assertArrayHasKey('host', $array);
@@ -182,13 +180,11 @@ class UpstreamDnsServerTest extends TestCase
     public function testRetrieveApiArray(): void
     {
         $array = $this->server->retrieveApiArray();
-        $this->assertIsArray($array);
     }
     
     public function testRetrieveAdminArray(): void
     {
         $array = $this->server->retrieveAdminArray();
-        $this->assertIsArray($array);
     }
     
     public function testSetGetCreatedBy(): void

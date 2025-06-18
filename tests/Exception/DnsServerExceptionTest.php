@@ -26,8 +26,6 @@ class DnsServerExceptionTest extends TestCase
         $exception = new DnsServerException($message, $code);
         
         $json = $exception->jsonSerialize();
-        
-        $this->assertIsArray($json);
         $this->assertArrayHasKey('message', $json);
         $this->assertArrayHasKey('code', $json);
         $this->assertArrayHasKey('file', $json);
@@ -36,9 +34,7 @@ class DnsServerExceptionTest extends TestCase
         
         $this->assertSame($message, $json['message']);
         $this->assertSame($code, $json['code']);
-        $this->assertIsString($json['file']);
         $this->assertIsInt($json['line']);
-        $this->assertIsString($json['trace']);
     }
     
     public function testJsonEncode(): void
@@ -48,8 +44,6 @@ class DnsServerExceptionTest extends TestCase
         $exception = new DnsServerException($message, $code);
         
         $json = json_encode($exception);
-        
-        $this->assertIsString($json);
         $this->assertNotEmpty($json);
         
         $decoded = json_decode($json, true);

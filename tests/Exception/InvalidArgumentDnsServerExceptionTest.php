@@ -38,8 +38,6 @@ class InvalidArgumentDnsServerExceptionTest extends TestCase
         
         $exception = new InvalidArgumentDnsServerException($message, $code);
         $json = $exception->jsonSerialize();
-        
-        $this->assertIsArray($json);
         $this->assertArrayHasKey('message', $json);
         $this->assertArrayHasKey('code', $json);
         $this->assertSame($message, $json['message']);

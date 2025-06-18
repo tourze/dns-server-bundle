@@ -73,8 +73,6 @@ class DNSRecordTest extends TestCase
         );
         
         $array = $record->toArray();
-        
-        $this->assertIsArray($array);
         $this->assertArrayHasKey('hostname', $array);
         $this->assertArrayHasKey('type', $array);
         $this->assertArrayHasKey('TTL', $array);
@@ -171,8 +169,6 @@ class DNSRecordTest extends TestCase
         
         $json = json_encode($record);
         $decoded = json_decode($json, true);
-        
-        $this->assertIsArray($decoded);
         $this->assertArrayHasKey('hostname', $decoded);
         $this->assertArrayHasKey('type', $decoded);
         $this->assertArrayHasKey('TTL', $decoded);
