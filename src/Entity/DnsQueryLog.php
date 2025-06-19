@@ -13,13 +13,15 @@ use Tourze\Arrayable\PlainArrayInterface;
 use Tourze\DoctrineIndexedBundle\Attribute\IndexColumn;
 use Tourze\DoctrineIpBundle\Attribute\CreateIpColumn;
 use Tourze\DoctrineIpBundle\Attribute\UpdateIpColumn;
-use Tourze\DoctrineTimestampBundle\Attribute\CreateTimeColumn;
+use Tourze\DoctrineTimestampBundle\Traits\CreateTimeAware;
 
 #[ORM\Entity(repositoryClass: DnsQueryLogRepository::class)]
 #[ORM\Table(name: 'dns_query_log', options: ['comment' => 'DNS查询日志'])]
 #[ORM\Index(name: 'dns_query_log_domain_query_type_idx', columns: ['domain', 'query_type'])]
 class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface
 {
+    use CreateTimeAware;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => 'ID'])]
@@ -54,11 +56,6 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface
     #[UpdateIpColumn]
     #[ORM\Column(length: 128, nullable: true, options: ['comment' => '更新时IP'])]
     private ?string $updatedFromIp = null;
-
-    #[IndexColumn]
-    #[CreateTimeColumn]
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true, options: ['comment' => '创建时间'])]
-    private ?\DateTimeInterface $createTime = null;
 
     public function getId(): ?int
     {
@@ -153,18 +150,6 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface
     public function getUpdatedFromIp(): ?string
     {
         return $this->updatedFromIp;
-    }
-
-    public function setCreateTime(?\DateTimeInterface $createdAt): self
-    {
-        $this->createTime = $createdAt;
-
-        return $this;
-    }
-
-    public function getCreateTime(): ?\DateTimeInterface
-    {
-        return $this->createTime;
     }
 
     public function toPlainArray(): array
