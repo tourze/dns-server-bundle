@@ -18,7 +18,7 @@ use Tourze\DoctrineTimestampBundle\Traits\CreateTimeAware;
 #[ORM\Entity(repositoryClass: DnsQueryLogRepository::class)]
 #[ORM\Table(name: 'dns_query_log', options: ['comment' => 'DNS查询日志'])]
 #[ORM\Index(name: 'dns_query_log_domain_query_type_idx', columns: ['domain', 'query_type'])]
-class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface
+class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringable
 {
     use CreateTimeAware;
 
@@ -174,5 +174,10 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface
     public function retrieveAdminArray(): array
     {
         return $this->toPlainArray();
+    }
+
+    public function __toString(): string
+    {
+        return sprintf('%s (%s) - %s', $this->domain, $this->queryType->value, $this->clientIp);
     }
 }

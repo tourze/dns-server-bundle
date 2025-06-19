@@ -22,7 +22,7 @@ use Tourze\DoctrineUserBundle\Attribute\UpdatedByColumn;
 
 #[ORM\Entity(repositoryClass: UpstreamDnsServerRepository::class)]
 #[ORM\Table(name: 'dns_upstream_server', options: ['comment' => '上游DNS服务器'])]
-class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, AdminArrayInterface
+class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, AdminArrayInterface, \Stringable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -58,13 +58,13 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
     #[ORM\Column(type: Types::TEXT, nullable: true, options: ['comment' => '描述'])]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, options: ['comment' => '域名匹配模式'])]
     private string $pattern;
 
-    #[ORM\Column(type: Types::STRING, enumType: MatchStrategy::class)]
+    #[ORM\Column(type: Types::STRING, enumType: MatchStrategy::class, options: ['comment' => '匹配策略'])]
     private MatchStrategy $strategy;
 
-    #[ORM\Column]
+    #[ORM\Column(options: ['comment' => '是否为默认服务器'])]
     private bool $isDefault = false;
 
     #[ORM\Column(type: Types::JSON, nullable: true, options: ['comment' => '自定义应答IP列表'])]
@@ -73,7 +73,7 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => 'TTL(秒)'])]
     private int $ttl = 300;
 
-    #[ORM\Column(type: Types::STRING, enumType: DnsProtocolEnum::class)]
+    #[ORM\Column(type: Types::STRING, enumType: DnsProtocolEnum::class, options: ['comment' => 'DNS协议类型'])]
     private DnsProtocolEnum $protocol = DnsProtocolEnum::UDP;
 
     #[ORM\Column(length: 255, nullable: true, options: ['comment' => '证书路径'])]
@@ -381,5 +381,10 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
     public function retrieveAdminArray(): array
     {
         return $this->retrieveApiArray();
+    }
+
+    public function __toString(): string
+    {
+        return sprintf('%s (%s:%d)', $this->name, $this->host, $this->port);
     }
 }

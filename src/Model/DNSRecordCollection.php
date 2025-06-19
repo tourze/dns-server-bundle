@@ -165,7 +165,7 @@ final class DNSRecordCollection extends EntityAbstract implements
         $filtered = new self();
         $records = $this->records->getArrayCopy();
 
-        while ($record = array_shift($records)) {
+        while (($record = array_shift($records)) !== null) {
             if ($eval($record, new self(...$records))) {
                 $filtered[] = $record;
             }
