@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 转发策略枚举
  *
@@ -10,8 +16,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc2308 DNS查询转发
  * @see https://datatracker.ietf.org/doc/html/rfc5625 DNS代理实现指南
  */
-enum ForwardPolicy: string
+enum ForwardPolicy: string implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 从不转发
      * 只使用本地解析，不会将查询转发给其他DNS服务器
@@ -54,6 +62,11 @@ enum ForwardPolicy: string
             self::ONLY => '只转发，不查本地',
             self::CONDITIONAL => '条件转发（基于域名或记录类型）',
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 
     /**

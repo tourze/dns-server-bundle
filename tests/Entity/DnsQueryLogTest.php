@@ -80,7 +80,7 @@ class DnsQueryLogTest extends TestCase
     
     public function testSetGetCreateTime(): void
     {
-        $date = new \DateTime();
+        $date = new \DateTimeImmutable();
         $this->assertSame($this->log, $this->log->setCreateTime($date));
         $this->assertSame($date, $this->log->getCreateTime());
     }
@@ -98,11 +98,13 @@ class DnsQueryLogTest extends TestCase
     {
         $this->log->setDomain('example.com');
         $array = $this->log->retrievePlainArray();
+        $this->assertEquals('example.com', $array['domain']);
     }
     
     public function testRetrieveAdminArray(): void
     {
         $this->log->setDomain('example.com');
         $array = $this->log->retrieveAdminArray();
+        $this->assertEquals('example.com', $array['domain']);
     }
 } 

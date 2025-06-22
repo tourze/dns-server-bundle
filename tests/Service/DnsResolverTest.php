@@ -108,13 +108,4 @@ class DnsResolverTest extends TestCase
         $this->assertCount(0, $response->answers);
     }
     
-    public function testQuery_MethodExists(): void
-    {
-        $this->assertTrue(method_exists($this->resolver, 'query'));
-    }
-    
-    public function testQueryIpv6_MethodExists(): void
-    {
-        $this->assertTrue(method_exists($this->resolver, 'queryIpv6'));
-    }
 } 

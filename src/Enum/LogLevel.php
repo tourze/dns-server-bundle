@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 服务器日志级别枚举
  * 
@@ -10,8 +16,10 @@ namespace DnsServerBundle\Enum;
  * 
  * @see https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1 Syslog 严重性级别
  */
-enum LogLevel: string
+enum LogLevel: string implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 调试信息
      * 详细的调试信息，用于开发和故障排查
@@ -70,7 +78,7 @@ enum LogLevel: string
 
     /**
      * 获取日志级别的描述
-     * 
+     *
      * @return string 返回当前日志级别的中文描述
      */
     public function getDescription(): string
@@ -87,9 +95,14 @@ enum LogLevel: string
         };
     }
 
+    public function getLabel(): string
+    {
+        return $this->getDescription();
+    }
+
     /**
      * 获取日志级别的优先级
-     * 
+     *
      * @return int 返回日志级别的优先级，数字越大优先级越高（0-7）
      * @see https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1
      */
@@ -109,7 +122,7 @@ enum LogLevel: string
 
     /**
      * 判断当前日志级别是否高于或等于指定级别
-     * 
+     *
      * @param self $level 要比较的日志级别
      * @return bool 如果当前级别高于或等于指定级别返回true，否则返回false
      */

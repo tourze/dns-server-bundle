@@ -59,11 +59,11 @@ class DnsPacket
             if ($labelLen >= 0xC0) {
                 $pointer = unpack('n', substr($data, $offset, 2))[1] & 0x3FFF;
                 [$suffix] = $this->readName($data, $pointer);
-                $name .= ($name ? '.' : '') . $suffix;
+                $name .= ($name !== '' ? '.' : '') . $suffix;
                 $len += 2;
                 break;
             }
-            $name .= ($name ? '.' : '') . substr($data, $offset + 1, $labelLen);
+            $name .= ($name !== '' ? '.' : '') . substr($data, $offset + 1, $labelLen);
             $offset += $labelLen + 1;
             $len += $labelLen + 1;
         }
@@ -78,6 +78,46 @@ class DnsPacket
     public function getQuestions(): array
     {
         return $this->questions;
+    }
+
+    public function isResponse(): bool
+    {
+        return $this->isResponse;
+    }
+
+    public function getOpcode(): int
+    {
+        return $this->opcode;
+    }
+
+    public function isAuthoritative(): bool
+    {
+        return $this->authoritative;
+    }
+
+    public function isTruncated(): bool
+    {
+        return $this->truncated;
+    }
+
+    public function getRcode(): int
+    {
+        return $this->rcode;
+    }
+
+    public function getAnswers(): array
+    {
+        return $this->answers;
+    }
+
+    public function getAuthorities(): array
+    {
+        return $this->authorities;
+    }
+
+    public function getAdditionals(): array
+    {
+        return $this->additionals;
     }
 
     public function buildResponse(array $answers): string

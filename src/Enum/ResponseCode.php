@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 响应码枚举
  *
@@ -11,8 +17,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1 基础响应码
  * @see https://datatracker.ietf.org/doc/html/rfc6895#section-2.3 扩展响应码
  */
-enum ResponseCode: int
+enum ResponseCode: int implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 没有错误
      * 查询成功完成
@@ -198,5 +206,13 @@ enum ResponseCode: int
     public function isDomainNotExist(): bool
     {
         return $this === self::NXDOMAIN;
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }

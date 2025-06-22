@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 传输协议枚举
  *
@@ -11,8 +17,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.2 传输协议
  * @see https://datatracker.ietf.org/doc/html/rfc7766 DNS over TCP 要求
  */
-enum Protocol: string
+enum Protocol: string implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * UDP协议
      * DNS 查询的主要传输协议，适用于小于 512 字节的消息
@@ -62,5 +70,13 @@ enum Protocol: string
     public function isTcp(): bool
     {
         return $this === self::TCP;
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }

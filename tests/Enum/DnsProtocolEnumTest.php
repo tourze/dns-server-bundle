@@ -40,7 +40,7 @@ class DnsProtocolEnumTest extends TestCase
         $udp2 = DnsProtocolEnum::UDP;
         $tcp = DnsProtocolEnum::TCP;
 
-        $this->assertTrue($udp1 === $udp2);
-        $this->assertFalse($udp1 === $tcp);
+        $this->assertSame($udp1, $udp2);
+        $this->assertNotSame($udp1, $tcp);
     }
 } 

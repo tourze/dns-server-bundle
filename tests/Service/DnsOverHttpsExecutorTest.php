@@ -10,6 +10,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use React\Dns\Model\Message;
 use React\Dns\Protocol\BinaryDumper;
+use React\Dns\Protocol\Parser;
 use React\Dns\Query\Query;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -20,11 +21,13 @@ class DnsOverHttpsExecutorTest extends TestCase
     private MockObject $httpClient;
     private UpstreamDnsServer $server;
     private BinaryDumper $dumper;
+    private Parser $parser;
     
     protected function setUp(): void
     {
         $this->httpClient = $this->createMock(HttpClientInterface::class);
         $this->dumper = new BinaryDumper();
+        $this->parser = new Parser();
         
         $this->server = new UpstreamDnsServer();
         $this->server->setHost('dns.google')
@@ -35,7 +38,8 @@ class DnsOverHttpsExecutorTest extends TestCase
         $this->executor = new DnsOverHttpsExecutor(
             $this->httpClient,
             $this->server,
-            $this->dumper
+            $this->dumper,
+            $this->parser
         );
     }
     

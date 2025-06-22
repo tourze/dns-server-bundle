@@ -19,7 +19,6 @@ class DnsResolver
     private BinaryDumper $dumper;
     private const MAX_RETRIES = 3;
     private const UDP_MAX_SIZE = 512;
-    private const EDNS_VERSION = 0;
     private const EDNS_UDP_SIZE = 4096;
 
     public function __construct()
@@ -57,9 +56,7 @@ class DnsResolver
             Message::TYPE_OPT,
             self::EDNS_UDP_SIZE,
             0,
-            self::EDNS_VERSION,
-            false,
-            []
+            ''
         );
     }
 
@@ -74,7 +71,7 @@ class DnsResolver
             // 构建查询报文
             $query = new Message();
             $query->rd = true; // 递归查询
-            $query->questions[] = new Record($name, $type, Message::CLASS_IN, 0, null);
+            $query->questions[] = new Record($name, $type, Message::CLASS_IN, 0, '');
 
             // 添加EDNS0支持
             $this->addEdnsRecord($query);
@@ -160,7 +157,7 @@ class DnsResolver
         $response->rd = true;
         $response->ra = true;
         $type = $isIpv6 ? Message::TYPE_AAAA : Message::TYPE_A;
-        $response->questions[] = new Record($name, $type, Message::CLASS_IN, 0, null);
+        $response->questions[] = new Record($name, $type, Message::CLASS_IN, 0, '');
 
         foreach ($ips as $ip) {
             $response->answers[] = new Record(

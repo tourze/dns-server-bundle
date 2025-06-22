@@ -17,12 +17,10 @@ class DnsWorkerCommandTest extends TestCase
 {
     private CommandTester $commandTester;
     private MockObject $dnsWorkerService;
-    private MockObject $loop;
 
     protected function setUp(): void
     {
         $this->dnsWorkerService = $this->createMock(DnsWorkerService::class);
-        $this->loop = $this->createMock(LoopInterface::class);
         
         // 设置React\EventLoop\Loop的静态方法get返回值
         // 使用反射操作静态属性是危险的，对于测试可以使用静态方法打桩
@@ -77,7 +75,8 @@ class DnsWorkerCommandTest extends TestCase
     
     public function testConfigure(): void
     {
-        $command = new DnsWorkerCommand($this->dnsWorkerService);
+        $realService = $this->createMock(DnsWorkerService::class);
+        $command = new DnsWorkerCommand($realService);
         
         // 验证命令名称
         $this->assertSame('dns:worker:start', $command->getName());

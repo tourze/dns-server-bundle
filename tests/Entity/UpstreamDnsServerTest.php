@@ -180,11 +180,15 @@ class UpstreamDnsServerTest extends TestCase
     public function testRetrieveApiArray(): void
     {
         $array = $this->server->retrieveApiArray();
+        $this->assertArrayHasKey('id', $array);
+        $this->assertArrayHasKey('name', $array);
     }
     
     public function testRetrieveAdminArray(): void
     {
         $array = $this->server->retrieveAdminArray();
+        $this->assertArrayHasKey('id', $array);
+        $this->assertArrayHasKey('name', $array);
     }
     
     public function testSetGetCreatedBy(): void

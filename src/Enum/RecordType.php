@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 资源记录类型枚举
  * 
@@ -13,8 +19,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.2 基础记录类型
  * @see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4 IANA DNS记录类型列表
  */
-enum RecordType: int
+enum RecordType: int implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * IPv4 地址记录
      * 将域名映射到 IPv4 地址
@@ -260,5 +268,13 @@ enum RecordType: int
             self::AXFR => '请求区域传输',
             self::ANY => '请求所有记录',
         };
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }

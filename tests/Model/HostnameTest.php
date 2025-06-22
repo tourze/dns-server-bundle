@@ -2,7 +2,6 @@
 
 namespace DnsServerBundle\Tests\Model;
 
-use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
 use DnsServerBundle\Model\Hostname;
 use PHPUnit\Framework\TestCase;
 
@@ -21,9 +20,6 @@ class HostnameTest extends TestCase
     {
         // 跳过这个测试，因为filter_var的行为在不同PHP版本之间可能有所不同
         $this->markTestSkipped('跳过无效主机名测试，因为filter_var可能在不同环境中行为不一致');
-        
-        $this->expectException(InvalidArgumentDnsServerException::class);
-        new Hostname('invalid!hostname');
     }
     
     public function testConstructorAddsDotSuffix(): void

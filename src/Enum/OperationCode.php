@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 操作码枚举
  *
@@ -11,8 +17,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1 DNS消息格式
  * @see https://datatracker.ietf.org/doc/html/rfc3425 非查询操作码
  */
-enum OperationCode: int
+enum OperationCode: int implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 标准查询
      * DNS 消息中最常见的操作码，用于请求域名解析
@@ -62,5 +70,13 @@ enum OperationCode: int
             self::NOTIFY => '通知',
             self::UPDATE => '动态更新',
         };
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }

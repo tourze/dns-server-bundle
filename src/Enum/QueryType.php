@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 查询类型枚举
  * 
@@ -11,8 +17,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc2136 DNS动态更新
  * @see https://datatracker.ietf.org/doc/html/rfc1996 DNS NOTIFY机制
  */
-enum QueryType: int
+enum QueryType: int implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 标准查询
      * 最常见的DNS查询类型，用于解析域名到IP地址或其他记录
@@ -59,5 +67,13 @@ enum QueryType: int
             self::NOTIFY => '区域变更通知',
             self::UPDATE => '动态更新请求',
         };
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }

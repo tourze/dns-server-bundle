@@ -22,7 +22,7 @@ class AdminMenu implements MenuProviderInterface
 
     public function __invoke(ItemInterface $item): void
     {
-        if (!$item->getChild('DNS服务器')) {
+        if ($item->getChild('DNS服务器') === null) {
             $item->addChild('DNS服务器');
         }
 

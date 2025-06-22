@@ -7,8 +7,8 @@ namespace DnsServerBundle\Service;
 use DnsServerBundle\Entity\UpstreamDnsServer;
 use DnsServerBundle\Exception\QueryFailure;
 use React\Dns\Model\Message;
-use React\Dns\Model\Record;
 use React\Dns\Protocol\BinaryDumper;
+use React\Dns\Protocol\Parser;
 use React\Dns\Query\ExecutorInterface;
 use React\Dns\Query\Query;
 use React\Promise\PromiseInterface;
@@ -22,6 +22,7 @@ class DnsOverHttpsExecutor implements ExecutorInterface
         private readonly HttpClientInterface $httpClient,
         private readonly UpstreamDnsServer $server,
         private readonly BinaryDumper $dumper,
+        private readonly Parser $parser,
     ) {
     }
 
@@ -31,15 +32,7 @@ class DnsOverHttpsExecutor implements ExecutorInterface
             $message = new Message();
             $message->qr = false;
             $message->rd = true;
-            $message->questions = [
-                new Record(
-                    $query->name,
-                    $query->type,
-                    Message::CLASS_IN,
-                    0,
-                    null
-                )
-            ];
+            $message->questions = [$query];
 
             $url = 'https://' . $this->server->getHost() . '/dns-query';
             
@@ -60,7 +53,10 @@ class DnsOverHttpsExecutor implements ExecutorInterface
                 return reject(new QueryFailure('DoH query failed: HTTP status ' . $response->getStatusCode()));
             }
             
-            return resolve($response->getContent());
+            $responseData = $response->getContent();
+            $responseMessage = $this->parser->parseMessage($responseData);
+            
+            return resolve($responseMessage);
         } catch (\Throwable $e) {
             return reject(new QueryFailure('DoH query failed: ' . $e->getMessage()));
         }

@@ -64,7 +64,7 @@ final class DNSRecordCollection extends EntityAbstract implements
         $this->records->next();
     }
 
-    public function key(): bool|int|string|null
+    public function key(): int|string
     {
         return $this->records->key();
     }

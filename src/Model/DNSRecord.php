@@ -37,7 +37,7 @@ final class DNSRecord extends EntityAbstract implements DNSRecordInterface
             $type,
             $hostname,
             $ttl,
-            $IPAddress ? IPAddress::createFromString($IPAddress) : null,
+            $IPAddress !== null ? IPAddress::createFromString($IPAddress) : null,
             $class,
             $data
         );

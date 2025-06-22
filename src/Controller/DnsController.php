@@ -23,22 +23,22 @@ class DnsController extends AbstractController
     }
 
     #[Route(path: '/dns-query', methods: ['GET'])]
-    public function dnsQuery(Request $request): Response
+    public function __invoke(Request $request): Response
     {
-        $name = strtolower($request->query->get('name'));
-        if (!$name) {
+        $name = strtolower((string) $request->query->get('name'));
+        if ('' === $name) {
             return $this->json(['Status' => 3]); // NXDOMAIN
         }
 
         // 查找匹配的上游服务器
         $upstreamServer = $this->upstreamDnsServerRepository->findMatchingServer($name);
-        if (!$upstreamServer) {
+        if (null === $upstreamServer) {
             $upstreamServer = $this->upstreamDnsServerRepository->getDefaultServer();
         }
 
         try {
             // 根据配置选择查询方式
-            if ($upstreamServer->getCustomAnswers()) {
+            if (null !== $upstreamServer->getCustomAnswers()) {
                 $response = $this->dnsResolver->createCustomResponse(
                     $name,
                     $upstreamServer->getCustomAnswers(),
@@ -54,10 +54,10 @@ class DnsController extends AbstractController
                 'RD' => $response->rd,
                 'RA' => $response->ra,
                 'Question' => array_map(
-                    fn(Record $r) => [
-                        'name' => $r->name,
-                        'type' => $r->type,
-                        'class' => $r->class,
+                    static fn(\React\Dns\Query\Query $q) => [
+                        'name' => $q->name,
+                        'type' => $q->type,
+                        'class' => $q->class,
                     ],
                     $response->questions
                 ),

@@ -7,8 +7,8 @@ namespace DnsServerBundle\Service;
 use DnsServerBundle\Entity\UpstreamDnsServer;
 use DnsServerBundle\Exception\QueryFailure;
 use React\Dns\Model\Message;
-use React\Dns\Model\Record;
 use React\Dns\Protocol\BinaryDumper;
+use React\Dns\Protocol\Parser;
 use React\Dns\Query\ExecutorInterface;
 use React\Dns\Query\Query;
 use React\Promise\PromiseInterface;
@@ -20,6 +20,7 @@ class DnsOverTlsExecutor implements ExecutorInterface
     public function __construct(
         private readonly UpstreamDnsServer $server,
         private readonly BinaryDumper $dumper,
+        private readonly Parser $parser,
     ) {
     }
 
@@ -29,15 +30,7 @@ class DnsOverTlsExecutor implements ExecutorInterface
             $message = new Message();
             $message->qr = false;
             $message->rd = true;
-            $message->questions = [
-                new Record(
-                    $query->name,
-                    $query->type,
-                    Message::CLASS_IN,
-                    0,
-                    []
-                )
-            ];
+            $message->questions = [$query];
 
             $context = stream_context_create([
                 'ssl' => [
@@ -82,7 +75,8 @@ class DnsOverTlsExecutor implements ExecutorInterface
                 throw new QueryFailure('Incomplete response received');
             }
 
-            return resolve($response);
+            $responseMessage = $this->parser->parseMessage($response);
+            return resolve($responseMessage);
         } catch (\Throwable $e) {
             return reject(new QueryFailure('DoT query failed: ' . $e->getMessage()));
         }

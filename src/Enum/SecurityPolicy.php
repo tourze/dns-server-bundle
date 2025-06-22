@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 服务器安全策略枚举
  *
@@ -10,8 +16,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc4033 DNSSEC协议
  * @see https://datatracker.ietf.org/doc/html/rfc4035 DNSSEC协议实现
  */
-enum SecurityPolicy: string
+enum SecurityPolicy: string implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 开放模式
      * 最基本的安全级别，接受所有DNS请求，不进行额外的安全验证
@@ -67,5 +75,13 @@ enum SecurityPolicy: string
     public function requiresDnssec(): bool
     {
         return in_array($this, [self::DNSSEC, self::STRICT]);
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }

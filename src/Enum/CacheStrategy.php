@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 缓存策略枚举
  *
@@ -10,8 +16,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc1034#section-4.3.4 DNS缓存
  * @see https://datatracker.ietf.org/doc/html/rfc2308 DNS缓存的否定响应
  */
-enum CacheStrategy: string
+enum CacheStrategy: string implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 不缓存
      * 不使用任何缓存，所有查询都直接转发到上游服务器
@@ -59,6 +67,11 @@ enum CacheStrategy: string
             self::FILESYSTEM => '文件系统缓存',
             self::HYBRID => '混合缓存 (内存+持久化)',
         };
+    }
+
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 
     /**

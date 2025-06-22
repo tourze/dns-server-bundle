@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 记录类枚举
  * 
@@ -11,8 +17,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.4 记录类定义
  * @see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-2 IANA DNS CLASS 列表
  */
-enum RecordClass: int
+enum RecordClass: int implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 互联网类
      * 最常用的记录类，用于互联网DNS记录
@@ -50,7 +58,7 @@ enum RecordClass: int
 
     /**
      * 获取记录类的名称
-     * 
+     *
      * @return string 返回记录类的标准名称
      */
     public function getName(): string
@@ -66,7 +74,7 @@ enum RecordClass: int
 
     /**
      * 获取记录类的描述
-     * 
+     *
      * @return string 返回记录类的中文描述
      */
     public function getDescription(): string
@@ -96,5 +104,13 @@ enum RecordClass: int
             'ANY' => self::ANY,
             default => null,
         };
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }

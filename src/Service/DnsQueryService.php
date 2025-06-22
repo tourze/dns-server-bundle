@@ -48,8 +48,8 @@ class DnsQueryService
         $executor = match ($server->getProtocol()) {
             DnsProtocolEnum::UDP => new UdpTransportExecutor($server->getHost() . ':' . $server->getPort()),
             DnsProtocolEnum::TCP => new TcpTransportExecutor($server->getHost() . ':' . $server->getPort()),
-            DnsProtocolEnum::DOH => new DnsOverHttpsExecutor($this->httpClient, $server, $this->dumper),
-            DnsProtocolEnum::DOT => new DnsOverTlsExecutor($server, $this->dumper),
+            DnsProtocolEnum::DOH => new DnsOverHttpsExecutor($this->httpClient, $server, $this->dumper, $this->parser),
+            DnsProtocolEnum::DOT => new DnsOverTlsExecutor($server, $this->dumper, $this->parser),
         };
 
         return new CoopExecutor(new TimeoutExecutor($executor, $server->getTimeout(), Loop::get()));
@@ -79,7 +79,7 @@ class DnsQueryService
         $server->send($data, $remoteAddress);
     }
 
-    private function handleQueryFailure(\Exception $error, Socket $server, string $remoteAddress, Message $request, DnsQueryLog $queryLog, float $startTime): void
+    private function handleQueryFailure(\Throwable $error, Socket $server, string $remoteAddress, Message $request, DnsQueryLog $queryLog, float $startTime): void
     {
         $queryLog->setResponseTime((int)((microtime(true) - $startTime) * 1000));
         $queryLog->setResponse('Error: ' . $error->getMessage());
@@ -174,7 +174,8 @@ class DnsQueryService
             $queryLog = $this->createQueryLog($domain, $type, $remoteAddress);
 
             // 检查缓存
-            if ($cachedResponse = $this->getCachedResponse($domain, $type)) {
+            $cachedResponse = $this->getCachedResponse($domain, $type);
+            if ($cachedResponse !== null) {
                 $this->handleQuerySuccess($cachedResponse, $server, $remoteAddress, $request, $queryLog, $startTime);
                 return;
             }
@@ -198,7 +199,7 @@ class DnsQueryService
                         $this->handleQuerySuccess($response, $server, $remoteAddress, $request, $queryLog, $startTime);
                         $deferred->resolve($response);
                     },
-                    function (\Exception $error) use ($server, $remoteAddress, $request, $queryLog, $startTime, $deferred, $queryKey) {
+                    function (\Throwable $error) use ($server, $remoteAddress, $request, $queryLog, $startTime, $deferred, $queryKey) {
                         unset($this->pendingQueries[$queryKey]);
                         $this->handleQueryFailure($error, $server, $remoteAddress, $request, $queryLog, $startTime);
                         $deferred->reject($error);

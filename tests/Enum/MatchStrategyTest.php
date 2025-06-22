@@ -38,10 +38,10 @@ class MatchStrategyTest extends TestCase
     
     public function testGetLabel(): void
     {
-        $this->assertIsString(MatchStrategy::EXACT->getLabel());
-        $this->assertIsString(MatchStrategy::REGEX->getLabel());
-        $this->assertIsString(MatchStrategy::SUFFIX->getLabel());
-        $this->assertIsString(MatchStrategy::PREFIX->getLabel());
-        $this->assertIsString(MatchStrategy::WILDCARD->getLabel());
+        $this->assertEquals('精确匹配', MatchStrategy::EXACT->getLabel());
+        $this->assertEquals('正则匹配', MatchStrategy::REGEX->getLabel());
+        $this->assertEquals('后缀匹配', MatchStrategy::SUFFIX->getLabel());
+        $this->assertEquals('前缀匹配', MatchStrategy::PREFIX->getLabel());
+        $this->assertEquals('通配符匹配', MatchStrategy::WILDCARD->getLabel());
     }
 } 

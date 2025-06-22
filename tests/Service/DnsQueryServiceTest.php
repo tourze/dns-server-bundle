@@ -10,7 +10,6 @@ use DnsServerBundle\Enum\RecordType;
 use DnsServerBundle\Repository\UpstreamDnsServerRepository;
 use DnsServerBundle\Service\DnsQueryService;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use React\Datagram\Socket;
@@ -21,30 +20,10 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class DnsQueryServiceTest extends TestCase
 {
-    private DnsQueryService $service;
-    private MockObject $upstreamDnsServerRepository;
-    private MockObject $entityManager;
-    private MockObject $logger;
-    private MockObject $cache;
-    private MockObject $httpClient;
     private UpstreamDnsServer $upstreamServer;
     
     protected function setUp(): void
     {
-        $this->upstreamDnsServerRepository = $this->createMock(UpstreamDnsServerRepository::class);
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->logger = $this->createMock(LoggerInterface::class);
-        $this->cache = $this->createMock(AdapterInterface::class);
-        $this->httpClient = $this->createMock(HttpClientInterface::class);
-        
-        $this->service = new DnsQueryService(
-            $this->upstreamDnsServerRepository,
-            $this->entityManager,
-            $this->logger,
-            $this->cache,
-            $this->httpClient
-        );
-        
         // 创建上游服务器实例
         $this->upstreamServer = new UpstreamDnsServer();
         $this->upstreamServer->setName('Google DNS')

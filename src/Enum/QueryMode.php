@@ -2,6 +2,12 @@
 
 namespace DnsServerBundle\Enum;
 
+use Tourze\EnumExtra\Itemable;
+use Tourze\EnumExtra\ItemTrait;
+use Tourze\EnumExtra\Labelable;
+use Tourze\EnumExtra\Selectable;
+use Tourze\EnumExtra\SelectTrait;
+
 /**
  * DNS 查询模式枚举
  *
@@ -10,8 +16,10 @@ namespace DnsServerBundle\Enum;
  * @see https://datatracker.ietf.org/doc/html/rfc1034#section-3.7 DNS查询处理
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-7.1 递归查询
  */
-enum QueryMode: string
+enum QueryMode: string implements Itemable, Labelable, Selectable
 {
+    use ItemTrait;
+    use SelectTrait;
     /**
      * 递归查询
      * DNS服务器会代表客户端完成整个解析过程，直到获得最终结果
@@ -53,5 +61,13 @@ enum QueryMode: string
     public function isIterative(): bool
     {
         return $this === self::ITERATIVE;
+    }
+
+    /**
+     * 获取标签
+     */
+    public function getLabel(): string
+    {
+        return $this->getDescription();
     }
 }
