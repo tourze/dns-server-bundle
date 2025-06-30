@@ -79,27 +79,4 @@ class DnsWorkerServiceTest extends TestCase
         $reflectionMethod->invoke($this->service, $message, $remoteAddress, $this->socket);
     }
     
-    /**
-     * 测试启动服务
-     */
-    public function testStart(): void
-    {
-        $serverIp = '0.0.0.0';
-        $port = 53;
-        
-        // 模拟启动服务，不验证事件回调注册
-        $serviceMock = $this->getMockBuilder(DnsWorkerService::class)
-            ->setConstructorArgs([$this->queryService, $this->logger])
-            ->onlyMethods(['start'])
-            ->getMock();
-        
-        // 创建真实的LoopInterface来测试
-        $loop = $this->createMock(LoopInterface::class);
-        
-        // 执行测试
-        $serviceMock->start($loop, $serverIp, $port);
-        
-        // 基本断言，确保方法能够调用而不抛出异常
-        $this->assertInstanceOf(DnsWorkerService::class, $serviceMock);
-    }
 } 

@@ -10,10 +10,10 @@ use Tourze\EnumExtra\SelectTrait;
 
 /**
  * DNS 记录类枚举
- * 
+ *
  * 定义了 DNS 资源记录的类别。
  * 类别字段在 DNS 消息中用于区分不同网络类型的记录。
- * 
+ *
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.4 记录类定义
  * @see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-2 IANA DNS CLASS 列表
  */

@@ -3,6 +3,8 @@
 namespace DnsServerBundle\Service;
 
 use DnsServerBundle\Entity\UpstreamDnsServer;
+use DnsServerBundle\Exception\DnsConnectionException;
+use DnsServerBundle\Exception\DnsResolutionException;
 use React\Dns\Model\Message;
 use React\Dns\Model\Record;
 use React\Dns\Protocol\BinaryDumper;
@@ -39,7 +41,7 @@ class DnsResolver
         );
 
         if (!$socket) {
-            throw new \RuntimeException("Failed to connect to DNS server: $errstr ($errno)");
+            throw new DnsConnectionException("Failed to connect to DNS server: $errstr ($errno)");
         }
 
         if ($protocol === 'tcp') {
@@ -84,14 +86,14 @@ class DnsResolver
             }
 
             if (@stream_socket_sendto($socket, $packet) === false) {
-                throw new \RuntimeException('Failed to send DNS query');
+                throw new DnsResolutionException('Failed to send DNS query');
             }
 
             // 接收响应
             if ($useTcp) {
                 $lengthBin = @stream_get_contents($socket, 2);
                 if ($lengthBin === false || strlen($lengthBin) !== 2) {
-                    throw new \RuntimeException('Failed to receive TCP response length');
+                    throw new DnsResolutionException('Failed to receive TCP response length');
                 }
                 $length = unpack('n', $lengthBin)[1];
                 $buf = @stream_get_contents($socket, $length);
@@ -100,7 +102,7 @@ class DnsResolver
             }
 
             if ($buf === false) {
-                throw new \RuntimeException('Failed to receive DNS response');
+                throw new DnsResolutionException('Failed to receive DNS response');
             }
 
             $response = $this->parser->parseMessage($buf);

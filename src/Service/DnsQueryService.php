@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DnsServerBundle\Service;
 
+use DnsServerBundle\Exception\ConcurrentQueryLimitException;
+
 use DnsServerBundle\Entity\DnsQueryLog;
 use DnsServerBundle\Entity\UpstreamDnsServer;
 use DnsServerBundle\Enum\DnsProtocolEnum;
@@ -159,7 +161,7 @@ class DnsQueryService
 
             // 检查并发限制
             if (count($this->pendingQueries) >= self::MAX_CONCURRENT_QUERIES) {
-                throw new \RuntimeException('Too many concurrent DNS queries');
+                throw new ConcurrentQueryLimitException('Too many concurrent DNS queries');
             }
 
             $queryKey = $this->getCacheKey($domain, $type);

@@ -10,10 +10,10 @@ use Tourze\EnumExtra\SelectTrait;
 
 /**
  * DNS 服务器日志级别枚举
- * 
+ *
  * 定义了日志记录的不同级别，遵循 RFC 5424 Syslog 协议的日志级别定义。
  * 级别从低到高依次为：DEBUG、INFO、NOTICE、WARNING、ERROR、CRITICAL、ALERT、EMERGENCY。
- * 
+ *
  * @see https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1 Syslog 严重性级别
  */
 enum LogLevel: string implements Itemable, Labelable, Selectable

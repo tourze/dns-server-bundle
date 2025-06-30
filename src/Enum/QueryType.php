@@ -10,9 +10,9 @@ use Tourze\EnumExtra\SelectTrait;
 
 /**
  * DNS 查询类型枚举
- * 
+ *
  * 定义了 DNS 查询操作中可能的查询类型。每种类型代表不同的 DNS 操作目的。
- * 
+ *
  * @see https://datatracker.ietf.org/doc/html/rfc1035 DNS协议规范
  * @see https://datatracker.ietf.org/doc/html/rfc2136 DNS动态更新
  * @see https://datatracker.ietf.org/doc/html/rfc1996 DNS NOTIFY机制

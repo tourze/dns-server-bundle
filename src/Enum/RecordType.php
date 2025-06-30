@@ -12,10 +12,10 @@ use Tourze\EnumExtra\SelectTrait;
 
 /**
  * DNS 资源记录类型枚举
- * 
+ *
  * 定义了 DNS 中所有标准的资源记录类型。
  * 每种记录类型都有其特定的用途和数据格式。
- * 
+ *
  * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.2 基础记录类型
  * @see https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#dns-parameters-4 IANA DNS记录类型列表
  */

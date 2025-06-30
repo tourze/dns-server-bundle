@@ -12,7 +12,7 @@ use Tourze\EasyAdminMenuBundle\Service\MenuProviderInterface;
 /**
  * DNS服务器管理菜单服务
  */
-#[AutoconfigureTag('easy_admin.menu_provider')]
+#[AutoconfigureTag(name: 'easy_admin.menu_provider')]
 class AdminMenu implements MenuProviderInterface
 {
     public function __construct(
