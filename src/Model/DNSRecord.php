@@ -15,7 +15,7 @@ final class DNSRecord extends EntityAbstract implements DNSRecordInterface
         private int $TTL,
         private ?IPAddress $IPAddress = null,
         private string $class = 'IN',
-        private ?DataAbstract $data = null
+        private ?DataAbstract $data = null,
     ) {
     }
 
@@ -25,11 +25,11 @@ final class DNSRecord extends EntityAbstract implements DNSRecordInterface
         int $ttl,
         ?string $IPAddress = null,
         string $class = 'IN',
-        ?string $data = null
+        ?string $data = null,
     ): DNSRecord {
         $type = DNSRecordType::createFromString($recordType);
         $hostname = Hostname::createFromString($hostname);
-        $data = ($data !== null)
+        $data = (null !== $data)
             ? DataAbstract::createFromTypeAndString($type, $data)
             : null;
 
@@ -37,7 +37,7 @@ final class DNSRecord extends EntityAbstract implements DNSRecordInterface
             $type,
             $hostname,
             $ttl,
-            $IPAddress !== null ? IPAddress::createFromString($IPAddress) : null,
+            null !== $IPAddress ? IPAddress::createFromString($IPAddress) : null,
             $class,
             $data
         );
@@ -73,34 +73,31 @@ final class DNSRecord extends EntityAbstract implements DNSRecordInterface
         return $this->data;
     }
 
-    public function setData(DataAbstract $data): self
+    public function setData(DataAbstract $data): void
     {
-
         $this->data = $data;
-        return $this;
     }
 
-    public function setTTL(int $ttl): DNSRecordInterface
+    public function setTTL(int $ttl): void
     {
         $this->TTL = $ttl;
-        return $this;
     }
 
     public function toArray(): array
     {
         $formatted = [
-            'hostname' => (string)$this->hostname,
-            'type' => (string)$this->recordType,
+            'hostname' => (string) $this->hostname,
+            'type' => (string) $this->recordType,
             'TTL' => $this->TTL,
             'class' => $this->class,
         ];
 
-        if ($this->IPAddress !== null) {
-            $formatted['IPAddress'] = (string)$this->IPAddress;
+        if (null !== $this->IPAddress) {
+            $formatted['IPAddress'] = (string) $this->IPAddress;
         }
 
-        if ($this->data !== null) {
-            $formatted[self::DATA] = (string)$this->data;
+        if (null !== $this->data) {
+            $formatted[self::DATA] = (string) $this->data;
         }
 
         return $formatted;
@@ -110,8 +107,8 @@ final class DNSRecord extends EntityAbstract implements DNSRecordInterface
     {
         return $this->hostname->equals($record->getHostname())
             && $this->recordType->equals($record->getType())
-            && (string)$this->data === (string)$record->getData() // could be null
-            && (string)$this->IPAddress === (string)$record->getIPAddress(); // could be null
+            && (string) $this->data === (string) $record->getData() // could be null
+            && (string) $this->IPAddress === (string) $record->getIPAddress(); // could be null
     }
 
     public function __serialize(): array
@@ -119,19 +116,27 @@ final class DNSRecord extends EntityAbstract implements DNSRecordInterface
         return $this->toArray();
     }
 
+    /** @param array<string, mixed> $unserialized */
     public function __unserialize(array $unserialized): void
     {
         $rawIPAddres = $unserialized['IPAddress'] ?? null;
-        $this->recordType = DNSRecordType::createFromString($unserialized['type']);
-        $this->hostname = Hostname::createFromString($unserialized['hostname']);
-        $this->TTL = (int) $unserialized['TTL'];
-        $this->IPAddress = $rawIPAddres ? IPAddress::createFromString($rawIPAddres) : null;
-        $this->class = $unserialized['class'];
-        $this->data = (isset($unserialized[self::DATA]))
-            ? DataAbstract::createFromTypeAndString($this->recordType, $unserialized[self::DATA])
+        $rawType = $unserialized['type'] ?? '';
+        $rawHostname = $unserialized['hostname'] ?? '';
+        $rawClass = $unserialized['class'] ?? 'IN';
+        $rawData = $unserialized[self::DATA] ?? null;
+        $rawTTL = $unserialized['TTL'] ?? 0;
+
+        $this->recordType = DNSRecordType::createFromString(is_string($rawType) ? $rawType : '');
+        $this->hostname = Hostname::createFromString(is_string($rawHostname) ? $rawHostname : '');
+        $this->TTL = is_int($rawTTL) ? $rawTTL : (is_numeric($rawTTL) ? (int) $rawTTL : 0);
+        $this->IPAddress = (\is_string($rawIPAddres) && '' !== $rawIPAddres) ? IPAddress::createFromString($rawIPAddres) : null;
+        $this->class = is_string($rawClass) ? $rawClass : 'IN';
+        $this->data = is_string($rawData)
+            ? DataAbstract::createFromTypeAndString($this->recordType, $rawData)
             : null;
     }
 
+    /** @return array<string, mixed> */
     public function jsonSerialize(): array
     {
         return $this->toArray();

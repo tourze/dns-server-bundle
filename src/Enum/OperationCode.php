@@ -24,6 +24,7 @@ enum OperationCode: int implements Itemable, Labelable, Selectable
     /**
      * 标准查询
      * DNS 消息中最常见的操作码，用于请求域名解析
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.3
      */
     case QUERY = 0;
@@ -32,6 +33,7 @@ enum OperationCode: int implements Itemable, Labelable, Selectable
      * 反向查询
      * 用于从 IP 地址查找对应的域名
      * 注意：该操作码已在 RFC3425 中废弃
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc3425
      * @deprecated
      */
@@ -40,6 +42,7 @@ enum OperationCode: int implements Itemable, Labelable, Selectable
     /**
      * 服务器状态请求
      * 用于查询 DNS 服务器的当前状态信息
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.3
      */
     case STATUS = 2;
@@ -47,6 +50,7 @@ enum OperationCode: int implements Itemable, Labelable, Selectable
     /**
      * 通知
      * 用于主 DNS 服务器通知从服务器区域发生变化
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1996
      */
     case NOTIFY = 4;
@@ -54,6 +58,7 @@ enum OperationCode: int implements Itemable, Labelable, Selectable
     /**
      * 动态更新
      * 用于动态添加、删除或修改 DNS 记录
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2136
      */
     case UPDATE = 5;
@@ -63,7 +68,7 @@ enum OperationCode: int implements Itemable, Labelable, Selectable
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::QUERY => '标准查询',
             self::IQUERY => '反向查询',
             self::STATUS => '服务器状态请求',

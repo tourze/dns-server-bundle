@@ -24,6 +24,7 @@ enum Protocol: string implements Itemable, Labelable, Selectable
     /**
      * UDP协议
      * DNS 查询的主要传输协议，适用于小于 512 字节的消息
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.2.1
      */
     case UDP = 'udp';
@@ -32,6 +33,7 @@ enum Protocol: string implements Itemable, Labelable, Selectable
      * TCP协议
      * 用于大于 512 字节的消息传输，或需要可靠传输的场景
      * 如：区域传送(AXFR)、DNSSEC 响应等
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc7766#section-1
      */
     case TCP = 'tcp';
@@ -41,7 +43,7 @@ enum Protocol: string implements Itemable, Labelable, Selectable
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::UDP => 'UDP协议',
             self::TCP => 'TCP协议',
         };
@@ -49,6 +51,7 @@ enum Protocol: string implements Itemable, Labelable, Selectable
 
     /**
      * 获取协议的默认端口
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.2.1
      */
     public function getDefaultPort(): int
@@ -61,7 +64,7 @@ enum Protocol: string implements Itemable, Labelable, Selectable
      */
     public function isUdp(): bool
     {
-        return $this === self::UDP;
+        return self::UDP === $this;
     }
 
     /**
@@ -69,7 +72,7 @@ enum Protocol: string implements Itemable, Labelable, Selectable
      */
     public function isTcp(): bool
     {
-        return $this === self::TCP;
+        return self::TCP === $this;
     }
 
     /**

@@ -2,9 +2,7 @@
 
 namespace DnsServerBundle\Model;
 
-use function preg_match;
-use function str_ireplace;
-use function trim;
+use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
 
 final class CAAData extends DataAbstract implements \Stringable
 {
@@ -12,7 +10,7 @@ final class CAAData extends DataAbstract implements \Stringable
 
     public function __construct(private int $flags, private string $tag, ?string $value = null)
     {
-        $this->value = $value !== null
+        $this->value = null !== $value
             ? $this->normalizeValue($value)
             : null;
     }
@@ -22,11 +20,17 @@ final class CAAData extends DataAbstract implements \Stringable
         return "{$this->flags} {$this->tag} \"{$this->value}\"";
     }
 
+    /** @param array<string, mixed> $unserialized */
     public function __unserialize(array $unserialized): void
     {
-        $this->flags = $unserialized['flags'];
-        $this->tag = $unserialized['tag'];
-        $this->value = $unserialized['value'];
+        $rawFlags = $unserialized['flags'] ?? 0;
+        $rawTag = $unserialized['tag'] ?? '';
+
+        $this->flags = is_int($rawFlags) ? $rawFlags : (is_numeric($rawFlags) ? (int) $rawFlags : 0);
+        $this->tag = is_string($rawTag) ? $rawTag : '';
+        $this->value = isset($unserialized['value']) && is_string($unserialized['value'])
+            ? $unserialized['value']
+            : null;
     }
 
     public function getFlags(): int
@@ -55,10 +59,10 @@ final class CAAData extends DataAbstract implements \Stringable
 
     private function normalizeValue(string $value): string
     {
-        $normalized = trim(str_ireplace('"', '', $value));
+        $normalized = \trim(\str_ireplace('"', '', $value));
 
-        if (preg_match('/\s/m', $normalized)) {
-            throw new \DnsServerBundle\Exception\InvalidArgumentDnsServerException("$value is not a valid CAA value");
+        if (1 === \preg_match('/\s/m', $normalized)) {
+            throw new InvalidArgumentDnsServerException("{$value} is not a valid CAA value");
         }
 
         return $normalized;

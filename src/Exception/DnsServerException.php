@@ -2,10 +2,9 @@
 
 namespace DnsServerBundle\Exception;
 
-use JsonSerializable;
-
-class DnsServerException extends \Exception implements JsonSerializable
+abstract class DnsServerException extends \Exception implements \JsonSerializable
 {
+    /** @return array<string, mixed> */
     public function jsonSerialize(): array
     {
         return [

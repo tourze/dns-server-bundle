@@ -3,25 +3,19 @@
 namespace DnsServerBundle\Model;
 
 use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
-use function filter_var;
-use function idn_to_ascii;
-use function idn_to_utf8;
-use function mb_strtolower;
-use function substr;
-use function trim;
 
 final class Hostname extends EntityAbstract implements \Stringable
 {
     private string $hostname;
 
     /**
-     * @throws \DnsServerBundle\Exception\InvalidArgumentDnsServerException
+     * @throws InvalidArgumentDnsServerException
      */
     public function __construct(string $hostname)
     {
         $hostname = $this->normalizeHostName($hostname);
 
-        if (filter_var($hostname, FILTER_VALIDATE_DOMAIN) !== $hostname) {
+        if (\filter_var($hostname, FILTER_VALIDATE_DOMAIN) !== $hostname) {
             throw new InvalidArgumentDnsServerException("{$hostname} is not a valid hostname");
         }
 
@@ -35,7 +29,7 @@ final class Hostname extends EntityAbstract implements \Stringable
 
     public function equals(Hostname $hostname): bool
     {
-        return $this->hostname === (string)$hostname;
+        return $this->hostname === (string) $hostname;
     }
 
     public static function createFromString(string $hostname): Hostname
@@ -50,7 +44,7 @@ final class Hostname extends EntityAbstract implements \Stringable
 
     public function getHostnameWithoutTrailingDot(): string
     {
-        return substr($this->hostname, 0, -1);
+        return \substr($this->hostname, 0, -1);
     }
 
     public function isPunycoded(): bool
@@ -60,17 +54,17 @@ final class Hostname extends EntityAbstract implements \Stringable
 
     public function toUTF8(): string
     {
-        return (string)idn_to_utf8($this->hostname, IDNA_ERROR_PUNYCODE, INTL_IDNA_VARIANT_UTS46);
+        return (string) \idn_to_utf8($this->hostname, IDNA_ERROR_PUNYCODE, INTL_IDNA_VARIANT_UTS46);
     }
 
     private static function punyCode(string $hostname): string
     {
-        return (string)idn_to_ascii($hostname, IDNA_ERROR_PUNYCODE, INTL_IDNA_VARIANT_UTS46);
+        return (string) \idn_to_ascii($hostname, IDNA_ERROR_PUNYCODE, INTL_IDNA_VARIANT_UTS46);
     }
 
     private function normalizeHostName(string $hostname): string
     {
-        $hostname = self::punyCode(mb_strtolower(trim($hostname)));
+        $hostname = self::punyCode(\mb_strtolower(\trim($hostname)));
 
         if (!str_ends_with($hostname, '.')) {
             return "{$hostname}.";

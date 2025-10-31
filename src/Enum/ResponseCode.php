@@ -24,6 +24,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 没有错误
      * 查询成功完成
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
      */
     case NOERROR = 0;
@@ -31,6 +32,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 格式错误
      * 名称服务器无法解释查询
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
      */
     case FORMERR = 1;
@@ -38,6 +40,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 服务器失败
      * 服务器处理查询时遇到问题
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
      */
     case SERVFAIL = 2;
@@ -45,6 +48,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 不存在的域名
      * 查询的域名不存在
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
      */
     case NXDOMAIN = 3;
@@ -52,6 +56,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 未实现
      * 名称服务器不支持请求的查询类型
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
      */
     case NOTIMP = 4;
@@ -59,6 +64,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 拒绝查询
      * 名称服务器因策略原因拒绝执行请求的操作
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
      */
     case REFUSED = 5;
@@ -66,6 +72,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 域名存在但不应该
      * 动态更新时，某个不应该存在的名称却存在
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2136#section-2
      */
     case YXDOMAIN = 6;
@@ -73,6 +80,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * RR集合存在但不应该
      * 动态更新时，某个不应该存在的RR集合却存在
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2136#section-2
      */
     case YXRRSET = 7;
@@ -80,6 +88,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * RR集合不存在
      * 动态更新时，某个应该存在的RR集合不存在
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2136#section-2
      */
     case NXRRSET = 8;
@@ -87,6 +96,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 服务器不权威
      * 服务器对请求的区域不具有权威性
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2136#section-2
      */
     case NOTAUTH = 9;
@@ -94,6 +104,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 名称不在区域内
      * 动态更新时，指定的名称不在区域内
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2136#section-2
      */
     case NOTZONE = 10;
@@ -101,6 +112,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 错误的EDNS版本
      * 服务器不支持请求中指定的EDNS版本
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc6891#section-9
      */
     case BADVERS = 16;
@@ -108,6 +120,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * TSIG签名验证失败
      * TSIG签名验证失败或格式错误
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2845#section-4
      * @deprecated 由于与 BADVERS(16) 值冲突，此处使用 17 作为替代值
      */
@@ -116,6 +129,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 密钥不被识别
      * 服务器不认识所使用的密钥
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2845#section-4
      */
     case BADKEY = 18;
@@ -123,6 +137,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 签名时间超出窗口
      * TSIG签名的时间戳超出可接受范围
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2845#section-4
      */
     case BADTIME = 19;
@@ -130,6 +145,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 错误的TKEY模式
      * 不支持请求的TKEY模式
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2930#section-2.6
      */
     case BADMODE = 20;
@@ -137,6 +153,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 重复的密钥名称
      * TKEY协商时发现重复的密钥名称
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2930#section-2.6
      */
     case BADNAME = 21;
@@ -144,6 +161,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 算法不支持
      * 不支持请求的加密算法
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2930#section-2.6
      */
     case BADALG = 22;
@@ -151,6 +169,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 错误的截断
      * 消息截断错误
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc4635#section-3.1
      */
     case BADTRUNC = 23;
@@ -158,6 +177,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
     /**
      * 错误的Cookie
      * DNS Cookie验证失败
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc7873#section-5
      */
     case BADCOOKIE = 24;
@@ -169,7 +189,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::NOERROR => '没有错误',
             self::FORMERR => '格式错误',
             self::SERVFAIL => '服务器失败',
@@ -197,7 +217,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
      */
     public function isSuccess(): bool
     {
-        return $this === self::NOERROR;
+        return self::NOERROR === $this;
     }
 
     /**
@@ -205,7 +225,7 @@ enum ResponseCode: int implements Itemable, Labelable, Selectable
      */
     public function isDomainNotExist(): bool
     {
-        return $this === self::NXDOMAIN;
+        return self::NXDOMAIN === $this;
     }
 
     /**

@@ -3,19 +3,17 @@
 namespace DnsServerBundle\Model;
 
 use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
-use function filter_var;
-use function trim;
 
 final class IPAddress extends EntityAbstract implements \Stringable
 {
     private string $IPAddress;
 
     /**
-     * @throws \DnsServerBundle\Exception\InvalidArgumentDnsServerException
+     * @throws InvalidArgumentDnsServerException
      */
     public function __construct(string $IPAddress)
     {
-        $IPAddress = trim($IPAddress);
+        $IPAddress = \trim($IPAddress);
 
         if (!self::isValid($IPAddress)) {
             throw new InvalidArgumentDnsServerException("{$IPAddress} is not a valid IP address");
@@ -31,7 +29,7 @@ final class IPAddress extends EntityAbstract implements \Stringable
 
     public static function isValid(string $IPAddress): bool
     {
-        return (bool) filter_var($IPAddress, FILTER_VALIDATE_IP);
+        return (bool) \filter_var($IPAddress, FILTER_VALIDATE_IP);
     }
 
     public static function createFromString(string $IPAddress): IPAddress
@@ -41,7 +39,7 @@ final class IPAddress extends EntityAbstract implements \Stringable
 
     public function equals(IPAddress $IPAddress): bool
     {
-        return $this->IPAddress === (string)$IPAddress;
+        return $this->IPAddress === (string) $IPAddress;
     }
 
     public function getIPAddress(): string
@@ -51,11 +49,11 @@ final class IPAddress extends EntityAbstract implements \Stringable
 
     public function isIPv6(): bool
     {
-        return (bool) filter_var($this->IPAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
+        return (bool) \filter_var($this->IPAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
     }
 
     public function isIPv4(): bool
     {
-        return (bool) filter_var($this->IPAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
+        return (bool) \filter_var($this->IPAddress, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
     }
 }

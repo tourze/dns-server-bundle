@@ -5,49 +5,56 @@ declare(strict_types=1);
 namespace DnsServerBundle\Tests\Exception;
 
 use DnsServerBundle\Exception\DnsServerException;
-use PHPUnit\Framework\TestCase;
+use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitBase\AbstractExceptionTestCase;
 
-class DnsServerExceptionTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(DnsServerException::class)]
+final class DnsServerExceptionTest extends AbstractExceptionTestCase
 {
-    public function testConstructor(): void
+    protected function getExceptionClass(): string
     {
-        $message = 'Test error message';
-        $code = 123;
-        $exception = new DnsServerException($message, $code);
-        
-        $this->assertSame($message, $exception->getMessage());
-        $this->assertSame($code, $exception->getCode());
+        return DnsServerException::class;
     }
-    
+
+    protected function getParentExceptionClass(): string
+    {
+        return \Exception::class;
+    }
+
     public function testJsonSerialize(): void
     {
         $message = 'Test error message';
         $code = 123;
-        $exception = new DnsServerException($message, $code);
-        
+        $exception = new InvalidArgumentDnsServerException($message, $code);
+
         $json = $exception->jsonSerialize();
         $this->assertArrayHasKey('message', $json);
         $this->assertArrayHasKey('code', $json);
         $this->assertArrayHasKey('file', $json);
         $this->assertArrayHasKey('line', $json);
         $this->assertArrayHasKey('trace', $json);
-        
+
         $this->assertSame($message, $json['message']);
         $this->assertSame($code, $json['code']);
         $this->assertIsInt($json['line']);
     }
-    
+
     public function testJsonEncode(): void
     {
         $message = 'Test error message';
         $code = 123;
-        $exception = new DnsServerException($message, $code);
-        
+        $exception = new InvalidArgumentDnsServerException($message, $code);
+
         $json = json_encode($exception);
         $this->assertNotEmpty($json);
-        
+
         $decoded = json_decode($json, true);
-        
+        $this->assertIsArray($decoded);
+
         $this->assertArrayHasKey('message', $decoded);
         $this->assertArrayHasKey('code', $decoded);
         $this->assertSame($message, $decoded['message']);

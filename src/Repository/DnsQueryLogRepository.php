@@ -7,15 +7,12 @@ namespace DnsServerBundle\Repository;
 use DnsServerBundle\Entity\DnsQueryLog;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Tourze\PHPUnitSymfonyKernelTest\Attribute\AsRepository;
 
 /**
  * @extends ServiceEntityRepository<DnsQueryLog>
- *
- * @method DnsQueryLog|null find($id, $lockMode = null, $lockVersion = null)
- * @method DnsQueryLog|null findOneBy(array $criteria, array $orderBy = null)
- * @method DnsQueryLog[] findAll()
- * @method DnsQueryLog[] findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
+#[AsRepository(entityClass: DnsQueryLog::class)]
 class DnsQueryLogRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
@@ -24,30 +21,52 @@ class DnsQueryLogRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return DnsQueryLog[]
+     * @return array<DnsQueryLog>
      */
     public function findByDomain(string $domain, int $limit = 10): array
     {
+        /** @var array<DnsQueryLog> */
         return $this->createQueryBuilder('d')
             ->where('d.domain = :domain')
             ->setParameter('domain', $domain)
             ->orderBy('d.id', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
-            ->getResult();
+            ->getResult()
+        ;
     }
 
     /**
-     * @return DnsQueryLog[]
+     * @return array<DnsQueryLog>
      */
     public function findByClientIp(string $clientIp, int $limit = 10): array
     {
+        /** @var array<DnsQueryLog> */
         return $this->createQueryBuilder('d')
             ->where('d.clientIp = :clientIp')
             ->setParameter('clientIp', $clientIp)
             ->orderBy('d.id', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
-            ->getResult();
+            ->getResult()
+        ;
+    }
+
+    public function save(DnsQueryLog $entity, bool $flush = true): void
+    {
+        $this->getEntityManager()->persist($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
+
+    public function remove(DnsQueryLog $entity, bool $flush = true): void
+    {
+        $this->getEntityManager()->remove($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
     }
 }

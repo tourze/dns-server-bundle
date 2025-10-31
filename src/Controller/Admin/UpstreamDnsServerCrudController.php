@@ -7,11 +7,17 @@ namespace DnsServerBundle\Controller\Admin;
 use DnsServerBundle\Entity\UpstreamDnsServer;
 use DnsServerBundle\Enum\DnsProtocolEnum;
 use DnsServerBundle\Enum\MatchStrategy;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminCrud;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
@@ -27,8 +33,11 @@ use Symfony\Component\Form\Extension\Core\Type\EnumType;
 
 /**
  * 上游DNS服务器管理控制器
+ *
+ * @extends AbstractCrudController<UpstreamDnsServer>
  */
-class UpstreamDnsServerCrudController extends AbstractCrudController
+#[AdminCrud(routePath: '/dns/upstream-server', routeName: 'dns_upstream_server')]
+final class UpstreamDnsServerCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
     {
@@ -46,24 +55,32 @@ class UpstreamDnsServerCrudController extends AbstractCrudController
             ->setPageTitle('new', '新建上游DNS服务器')
             ->setHelp('index', '这里显示所有配置的上游DNS服务器')
             ->setDefaultSort(['id' => 'DESC'])
-            ->setSearchFields(['id', 'name', 'host', 'pattern', 'description']);
+            ->setSearchFields(['id', 'name', 'host', 'pattern', 'description'])
+        ;
     }
 
     public function configureFields(string $pageName): iterable
     {
         // 基本信息
-        yield IdField::new('id')->setMaxLength(9999);
+        yield IdField::new('id', 'ID')->setMaxLength(9999);
         yield TextField::new('name', '服务器名称');
         yield TextField::new('host', '服务器地址');
         yield IntegerField::new('port', '端口号');
-        yield IntegerField::new('timeout', '超时时间(秒)');
-        yield IntegerField::new('weight', '权重');
+        yield IntegerField::new('timeout', '超时时间(秒)')
+            ->hideOnIndex()
+        ;
+        yield IntegerField::new('weight', '权重')
+            ->hideOnIndex()
+        ;
         yield TextareaField::new('description', '描述')
-            ->hideOnIndex();
+            ->hideOnIndex()
+        ;
 
         // 匹配策略
-        yield TextField::new('pattern', '匹配模式');
-        
+        yield TextField::new('pattern', '匹配模式')
+            ->hideOnIndex()
+        ;
+
         yield ChoiceField::new('strategy', '匹配策略')
             ->setFormType(EnumType::class)
             ->setFormTypeOptions([
@@ -71,9 +88,13 @@ class UpstreamDnsServerCrudController extends AbstractCrudController
             ])
             ->formatValue(function ($value) {
                 return $value instanceof MatchStrategy ? $value->getLabel() : '';
-            });
+            })
+            ->hideOnIndex()
+        ;
 
-        yield BooleanField::new('isDefault', '默认服务器');
+        yield BooleanField::new('isDefault', '默认服务器')
+            ->hideOnIndex()
+        ;
 
         // DNS协议设置
         yield ChoiceField::new('protocol', 'DNS协议')
@@ -83,25 +104,32 @@ class UpstreamDnsServerCrudController extends AbstractCrudController
             ])
             ->formatValue(function ($value) {
                 return $value instanceof DnsProtocolEnum ? $value->getLabel() : '';
-            });
+            })
+        ;
 
         yield TextField::new('certPath', '证书路径')
             ->hideOnIndex()
-            ->setHelp('仅在使用DOT或DOH协议时需要');
-            
+            ->setHelp('仅在使用DOT或DOH协议时需要')
+        ;
+
         yield TextField::new('keyPath', '私钥路径')
             ->hideOnIndex()
-            ->setHelp('仅在使用DOT或DOH协议时需要');
-            
+            ->setHelp('仅在使用DOT或DOH协议时需要')
+        ;
+
         yield BooleanField::new('verifyCert', '验证证书')
-            ->hideOnIndex();
+            ->hideOnIndex()
+        ;
 
         // 自定义应答
         yield ArrayField::new('customAnswers', '自定义应答IP列表')
             ->hideOnIndex()
-            ->setHelp('格式为 JSON 数组，例如：["1.1.1.1", "8.8.8.8"]');
-            
-        yield IntegerField::new('ttl', 'TTL(秒)');
+            ->setHelp('格式为 JSON 数组，例如：["1.1.1.1", "8.8.8.8"]')
+        ;
+
+        yield IntegerField::new('ttl', 'TTL(秒)')
+            ->hideOnIndex()
+        ;
 
         // 状态标记
         yield BooleanField::new('valid', '有效');
@@ -129,21 +157,22 @@ class UpstreamDnsServerCrudController extends AbstractCrudController
             ->add(BooleanFilter::new('isDefault', '默认服务器'))
             ->add(ChoiceFilter::new('protocol', 'DNS协议')
                 ->setChoices($protocolChoices))
-            ->add(BooleanFilter::new('valid', '有效'));
+            ->add(BooleanFilter::new('valid', '有效'))
+        ;
     }
 
     public function configureActions(Actions $actions): Actions
     {
         return $actions
             ->add(Crud::PAGE_INDEX, Action::DETAIL)
-            ->reorder(Crud::PAGE_INDEX, [Action::DETAIL, Action::EDIT, Action::DELETE]);
+        ;
     }
 
-    public function createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters): \Doctrine\ORM\QueryBuilder
+    public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
     {
         return parent::createIndexQueryBuilder($searchDto, $entityDto, $fields, $filters)
             ->select('entity')
-            ->orderBy('entity.id', 'DESC');
+            ->orderBy('entity.id', 'DESC')
+        ;
     }
-
 }

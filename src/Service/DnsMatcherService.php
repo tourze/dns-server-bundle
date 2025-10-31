@@ -33,10 +33,10 @@ class DnsMatcherService
         $regexPattern = str_replace('*', '.*', $regexPattern);
         // 构建完整正则表达式
         $regexPattern = '/^' . $regexPattern . '$/i';
-        
+
         // 使用正则匹配域名 - 安全处理无效模式
         try {
-            return (bool)preg_match($regexPattern, $domain);
+            return (bool) @preg_match($regexPattern, $domain);
         } catch (\Throwable $e) {
             // 正则表达式异常情况
             return false;
@@ -47,7 +47,7 @@ class DnsMatcherService
     {
         // 安全处理无效正则表达式
         try {
-            return (bool)preg_match($pattern, $domain);
+            return (bool) @preg_match($pattern, $domain);
         } catch (\Throwable $e) {
             return false;
         }
@@ -62,14 +62,14 @@ class DnsMatcherService
     {
         $domainLower = strtolower($domain);
         $patternLower = strtolower($pattern);
-        
+
         // 处理点开头的模式 (.example.com)
         if (str_starts_with($patternLower, '.')) {
             // 直接检查域名是否以模式结尾（包括点）
-            return $domainLower === substr($patternLower, 1) || 
-                   str_ends_with($domainLower, $patternLower);
+            return $domainLower === substr($patternLower, 1)
+                   || str_ends_with($domainLower, $patternLower);
         }
-        
+
         // 普通后缀匹配
         return str_ends_with($domainLower, $patternLower);
     }

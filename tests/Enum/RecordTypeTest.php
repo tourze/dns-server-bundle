@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace DnsServerBundle\Tests\Enum;
 
 use DnsServerBundle\Enum\RecordType;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitEnum\AbstractEnumTestCase;
 
-class RecordTypeTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(RecordType::class)]
+final class RecordTypeTest extends AbstractEnumTestCase
 {
     public function testEnumValues(): void
     {
@@ -89,8 +94,8 @@ class RecordTypeTest extends TestCase
         $this->assertSame(RecordType::AXFR, RecordType::fromName('AXFR'));
         $this->assertSame(RecordType::ANY, RecordType::fromName('ANY'));
     }
-    
-    public function testFromName_withLowercase(): void
+
+    public function testFromNameWithLowercase(): void
     {
         // 测试fromName方法对大小写不敏感
         $this->assertSame(RecordType::A, RecordType::fromName('a'));
@@ -99,15 +104,15 @@ class RecordTypeTest extends TestCase
         $this->assertSame(RecordType::AAAA, RecordType::fromName('aaaa'));
         $this->assertSame(RecordType::MX, RecordType::fromName('mx'));
     }
-    
-    public function testFromName_withInvalidName_returnsNull(): void
+
+    public function testFromNameWithInvalidNameReturnsNull(): void
     {
         // 测试fromName方法处理无效名称的情况
         $this->assertNull(RecordType::fromName('INVALID'));
         $this->assertNull(RecordType::fromName(''));
         $this->assertNull(RecordType::fromName('123'));
     }
-    
+
     public function testGetDescription(): void
     {
         // 测试getDescription方法返回值是否正确
@@ -134,4 +139,26 @@ class RecordTypeTest extends TestCase
         $this->assertSame('请求区域传输', RecordType::AXFR->getDescription());
         $this->assertSame('请求所有记录', RecordType::ANY->getDescription());
     }
-} 
+
+    public function testToArray(): void
+    {
+        // toArray 是实例方法，返回单个枚举项的数组表示
+        $array = RecordType::A->toArray();
+
+        $this->assertIsArray($array);
+        $this->assertCount(2, $array);
+
+        // 验证数组的键值对
+        $this->assertArrayHasKey('value', $array);
+        $this->assertArrayHasKey('label', $array);
+
+        // 验证值是否正确
+        $this->assertSame(1, $array['value']);
+        $this->assertSame('IPv4地址', $array['label']);
+
+        // 测试其他枚举值
+        $aAAAArray = RecordType::AAAA->toArray();
+        $this->assertSame(28, $aAAAArray['value']);
+        $this->assertSame('IPv6地址', $aAAAArray['label']);
+    }
+}

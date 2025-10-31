@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace DnsServerBundle\Service;
 
+use Monolog\Attribute\WithMonologChannel;
 use Psr\Log\LoggerInterface;
 use React\Datagram\Factory;
 use React\Datagram\Socket;
 use React\EventLoop\LoopInterface;
+use React\Promise\PromiseInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
-class DnsWorkerService
+#[Autoconfigure(public: true)]
+#[WithMonologChannel(channel: 'dns_server')]
+readonly class DnsWorkerService
 {
     public function __construct(
-        private readonly DnsQueryService $dnsQueryService,
-        private readonly LoggerInterface $logger,
+        private DnsQueryService $dnsQueryService,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -21,19 +26,23 @@ class DnsWorkerService
     {
         $factory = new Factory($loop);
 
-        $factory->createServer($host . ':' . $port)->then(
-            function (Socket $server) {
-                $this->logger->info('DNS Server listening on ' . $server->getLocalAddress());
+        /** @var PromiseInterface<Socket> $promise */
+        $promise = $factory->createServer($host . ':' . $port);
+        $promise->then(
+            function (Socket $server): void {
+                $localAddress = $server->getLocalAddress();
+                $addressString = is_string($localAddress) ? $localAddress : 'unknown';
+                $this->logger->info('DNS Server listening on ' . $addressString);
 
-                $server->on('message', function ($message, $remoteAddress, $server) {
+                $server->on('message', function (string $message, string $remoteAddress, Socket $server): void {
                     $this->handleDnsQuery($message, $remoteAddress, $server);
                 });
 
-                $server->on('error', function ($error) {
+                $server->on('error', function (\Throwable $error): void {
                     $this->logger->error('DNS Server error: ' . $error->getMessage());
                 });
             },
-            function ($error) {
+            function (\Throwable $error): void {
                 $this->logger->error('DNS Server failed to start: ' . $error->getMessage());
             }
         );

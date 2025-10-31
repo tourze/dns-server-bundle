@@ -83,7 +83,7 @@ enum LogLevel: string implements Itemable, Labelable, Selectable
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DEBUG => '调试信息',
             self::INFO => '一般信息',
             self::NOTICE => '通知信息',
@@ -95,6 +95,9 @@ enum LogLevel: string implements Itemable, Labelable, Selectable
         };
     }
 
+    /**
+     * 获取标签
+     */
     public function getLabel(): string
     {
         return $this->getDescription();
@@ -104,11 +107,12 @@ enum LogLevel: string implements Itemable, Labelable, Selectable
      * 获取日志级别的优先级
      *
      * @return int 返回日志级别的优先级，数字越大优先级越高（0-7）
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1
      */
     public function getPriority(): int
     {
-        return match($this) {
+        return match ($this) {
             self::DEBUG => 0,
             self::INFO => 1,
             self::NOTICE => 2,
@@ -124,6 +128,7 @@ enum LogLevel: string implements Itemable, Labelable, Selectable
      * 判断当前日志级别是否高于或等于指定级别
      *
      * @param self $level 要比较的日志级别
+     *
      * @return bool 如果当前级别高于或等于指定级别返回true，否则返回false
      */
     public function isHigherOrEqualThan(self $level): bool

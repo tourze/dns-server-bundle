@@ -2,8 +2,6 @@
 
 namespace DnsServerBundle\Model;
 
-use function vsprintf;
-
 final class SOAData extends DataAbstract implements \Stringable
 {
     /**
@@ -18,13 +16,23 @@ final class SOAData extends DataAbstract implements \Stringable
         private int $refresh,
         private int $retry,
         private int $expire,
-        private int $minTTL
+        private int $minTTL,
     ) {
     }
 
     public function __toString(): string
     {
-        return vsprintf(self::TEMPLATE, $this->toArray());
+        $values = [
+            (string) $this->mname,
+            (string) $this->rname,
+            (string) $this->serial,
+            (string) $this->refresh,
+            (string) $this->retry,
+            (string) $this->expire,
+            (string) $this->minTTL,
+        ];
+
+        return \vsprintf(self::TEMPLATE, $values);
     }
 
     public function getMname(): Hostname
@@ -62,12 +70,11 @@ final class SOAData extends DataAbstract implements \Stringable
         return $this->minTTL;
     }
 
-
     public function toArray(): array
     {
         return [
-            'mname' => (string)$this->mname,
-            'rname' => (string)$this->rname,
+            'mname' => (string) $this->mname,
+            'rname' => (string) $this->rname,
             'serial' => $this->serial,
             'refresh' => $this->refresh,
             'retry' => $this->retry,
@@ -76,14 +83,31 @@ final class SOAData extends DataAbstract implements \Stringable
         ];
     }
 
+    /** @param array<string, mixed> $unserialized */
     public function __unserialize(array $unserialized): void
     {
-        $this->mname = new Hostname($unserialized['mname']);
-        $this->rname = new Hostname($unserialized['rname']);
-        $this->serial = $unserialized['serial'];
-        $this->refresh = $unserialized['refresh'];
-        $this->retry = $unserialized['retry'];
-        $this->expire = $unserialized['expire'];
-        $this->minTTL = $unserialized['minimumTTL'];
+        $this->mname = new Hostname($this->extractString($unserialized, 'mname'));
+        $this->rname = new Hostname($this->extractString($unserialized, 'rname'));
+        $this->serial = $this->extractInt($unserialized, 'serial');
+        $this->refresh = $this->extractInt($unserialized, 'refresh');
+        $this->retry = $this->extractInt($unserialized, 'retry');
+        $this->expire = $this->extractInt($unserialized, 'expire');
+        $this->minTTL = $this->extractInt($unserialized, 'minimumTTL');
+    }
+
+    /** @param array<string, mixed> $data */
+    private function extractString(array $data, string $key): string
+    {
+        $value = $data[$key] ?? '';
+
+        return is_string($value) ? $value : '';
+    }
+
+    /** @param array<string, mixed> $data */
+    private function extractInt(array $data, string $key): int
+    {
+        $value = $data[$key] ?? 0;
+
+        return is_int($value) ? $value : (is_numeric($value) ? (int) $value : 0);
     }
 }

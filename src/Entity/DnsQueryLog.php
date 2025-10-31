@@ -8,54 +8,64 @@ use DnsServerBundle\Enum\RecordType;
 use DnsServerBundle\Repository\DnsQueryLogRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 use Tourze\Arrayable\AdminArrayInterface;
 use Tourze\Arrayable\PlainArrayInterface;
 use Tourze\DoctrineIndexedBundle\Attribute\IndexColumn;
-use Tourze\DoctrineIpBundle\Attribute\CreateIpColumn;
-use Tourze\DoctrineIpBundle\Attribute\UpdateIpColumn;
+use Tourze\DoctrineIpBundle\Traits\IpTraceableAware;
 use Tourze\DoctrineTimestampBundle\Traits\CreateTimeAware;
 
+/**
+ * @implements PlainArrayInterface<string, mixed>
+ * @implements AdminArrayInterface<string, mixed>
+ */
 #[ORM\Entity(repositoryClass: DnsQueryLogRepository::class)]
 #[ORM\Table(name: 'dns_query_log', options: ['comment' => 'DNS查询日志'])]
 #[ORM\Index(name: 'dns_query_log_domain_query_type_idx', columns: ['domain', 'query_type'])]
 class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringable
 {
     use CreateTimeAware;
+    use IpTraceableAware;
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => 'ID'])]
-    private ?int $id = 0;
+    private ?int $id = null;
 
     #[ORM\Column(type: Types::STRING, length: 255, options: ['comment' => '查询域名'])]
     #[IndexColumn]
-    private string $domain;
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
+    private string $domain = '';
 
-    #[ORM\Column(type: Types::STRING, length: 16, enumType: RecordType::class, options: ['comment' => '查询类型(A/AAAA/MX等)'])]
+    #[ORM\Column(type: Types::INTEGER, enumType: RecordType::class, options: ['comment' => '查询类型(A/AAAA/MX等)'])]
     #[IndexColumn]
-    private RecordType $queryType;
+    #[Assert\NotNull]
+    #[Assert\Choice(callback: [RecordType::class, 'cases'])]
+    private RecordType $queryType = RecordType::A;
 
     #[ORM\Column(type: Types::STRING, length: 39, options: ['comment' => '客户端IP'])]
     #[IndexColumn]
-    private string $clientIp;
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 39)]
+    #[Assert\Ip]
+    private string $clientIp = '';
 
     #[ORM\Column(type: Types::TEXT, nullable: true, options: ['comment' => 'DNS响应内容'])]
+    #[Assert\Length(max: 65535)]
     private ?string $response = null;
 
     #[ORM\Column(type: Types::BOOLEAN, options: ['comment' => '是否命中缓存'])]
     #[IndexColumn]
+    #[Assert\NotNull]
+    #[Assert\Type(type: 'boolean')]
     private bool $isHit = false;
 
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => '响应时间(毫秒)'])]
+    #[Assert\NotNull]
+    #[Assert\Type(type: 'integer')]
+    #[Assert\PositiveOrZero]
     private int $responseTime = 0;
-
-    #[CreateIpColumn]
-    #[ORM\Column(length: 128, nullable: true, options: ['comment' => '创建时IP'])]
-    private ?string $createdFromIp = null;
-
-    #[UpdateIpColumn]
-    #[ORM\Column(length: 128, nullable: true, options: ['comment' => '更新时IP'])]
-    private ?string $updatedFromIp = null;
 
     public function getId(): ?int
     {
@@ -67,10 +77,9 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringab
         return $this->domain;
     }
 
-    public function setDomain(string $domain): self
+    public function setDomain(string $domain): void
     {
         $this->domain = $domain;
-        return $this;
     }
 
     public function getQueryType(): RecordType
@@ -78,10 +87,9 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringab
         return $this->queryType;
     }
 
-    public function setQueryType(RecordType $queryType): self
+    public function setQueryType(RecordType $queryType): void
     {
         $this->queryType = $queryType;
-        return $this;
     }
 
     public function getClientIp(): string
@@ -89,10 +97,9 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringab
         return $this->clientIp;
     }
 
-    public function setClientIp(string $clientIp): self
+    public function setClientIp(string $clientIp): void
     {
         $this->clientIp = $clientIp;
-        return $this;
     }
 
     public function getResponse(): ?string
@@ -100,10 +107,9 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringab
         return $this->response;
     }
 
-    public function setResponse(?string $response): self
+    public function setResponse(?string $response): void
     {
         $this->response = $response;
-        return $this;
     }
 
     public function isHit(): bool
@@ -111,10 +117,14 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringab
         return $this->isHit;
     }
 
-    public function setIsHit(bool $isHit): self
+    public function getIsHit(): bool
+    {
+        return $this->isHit;
+    }
+
+    public function setIsHit(bool $isHit): void
     {
         $this->isHit = $isHit;
-        return $this;
     }
 
     public function getResponseTime(): int
@@ -122,36 +132,14 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringab
         return $this->responseTime;
     }
 
-    public function setResponseTime(int $responseTime): self
+    public function setResponseTime(int $responseTime): void
     {
         $this->responseTime = $responseTime;
-        return $this;
     }
 
-    public function setCreatedFromIp(?string $createdFromIp): self
-    {
-        $this->createdFromIp = $createdFromIp;
-
-        return $this;
-    }
-
-    public function getCreatedFromIp(): ?string
-    {
-        return $this->createdFromIp;
-    }
-
-    public function setUpdatedFromIp(?string $updatedFromIp): self
-    {
-        $this->updatedFromIp = $updatedFromIp;
-
-        return $this;
-    }
-
-    public function getUpdatedFromIp(): ?string
-    {
-        return $this->updatedFromIp;
-    }
-
+    /**
+     * @return array<string, mixed>
+     */
     public function toPlainArray(): array
     {
         return [
@@ -166,11 +154,17 @@ class DnsQueryLog implements PlainArrayInterface, AdminArrayInterface, \Stringab
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function retrievePlainArray(): array
     {
         return $this->toPlainArray();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function retrieveAdminArray(): array
     {
         return $this->toPlainArray();

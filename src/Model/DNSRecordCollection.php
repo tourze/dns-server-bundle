@@ -2,27 +2,22 @@
 
 namespace DnsServerBundle\Model;
 
-use ArrayAccess;
-use ArrayIterator;
-use Countable;
 use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
-use Iterator;
 use Tourze\Arrayable\Arrayable;
-use function array_filter;
-use function array_shift;
 
-final class DNSRecordCollection extends EntityAbstract implements
-    ArrayAccess,
-    Iterator,
-    Countable,
-    Arrayable,
-    Serializable
+/**
+ * @implements \ArrayAccess<int, DNSRecordInterface>
+ * @implements \Iterator<int, DNSRecordInterface|null>
+ * @implements Arrayable<int, DNSRecordInterface>
+ */
+final class DNSRecordCollection extends EntityAbstract implements \ArrayAccess, \Iterator, \Countable, Arrayable, Serializable
 {
-    private ArrayIterator $records;
+    /** @var \ArrayIterator<int, DNSRecordInterface> */
+    private \ArrayIterator $records;
 
     public function __construct(DNSRecordInterface ...$records)
     {
-        $this->records = new ArrayIterator($records);
+        $this->records = new \ArrayIterator(\array_values($records));
     }
 
     public function toArray(): array
@@ -34,13 +29,14 @@ final class DNSRecordCollection extends EntityAbstract implements
     {
         $copy = $this->records->getArrayCopy();
 
-        return array_shift($copy);
+        return \array_shift($copy);
     }
 
     public function filteredByType(DNSRecordType $type): self
     {
-        $fn = fn(DNSRecordInterface $record) => $record->getType()->equals($type);
-        return new self(...array_filter($this->records->getArrayCopy(), $fn));
+        $fn = fn (DNSRecordInterface $record) => $record->getType()->equals($type);
+
+        return new self(...\array_filter($this->records->getArrayCopy(), $fn));
     }
 
     public function has(DNSRecordInterface $lookupRecord): bool
@@ -56,7 +52,14 @@ final class DNSRecordCollection extends EntityAbstract implements
 
     public function current(): ?DNSRecordInterface
     {
-        return $this->records->current();
+        if (!$this->valid()) {
+            return null;
+        }
+
+        $current = $this->records->current();
+        assert($current instanceof DNSRecordInterface);
+
+        return $current;
     }
 
     public function next(): void
@@ -64,9 +67,11 @@ final class DNSRecordCollection extends EntityAbstract implements
         $this->records->next();
     }
 
-    public function key(): int|string
+    public function key(): int
     {
-        return $this->records->key();
+        $key = $this->records->key();
+
+        return is_int($key) ? $key : 0;
     }
 
     public function valid(): bool
@@ -79,20 +84,17 @@ final class DNSRecordCollection extends EntityAbstract implements
         $this->records->rewind();
     }
 
-    /**
-     * @param mixed $offset
-     */
     public function offsetExists($offset): bool
     {
         return $this->records->offsetExists($offset);
     }
 
-    /**
-     * @param mixed $offset
-     */
     public function offsetGet($offset): DNSRecordInterface
     {
-        return $this->records->offsetGet($offset);
+        $record = $this->records->offsetGet($offset);
+        assert($record instanceof DNSRecordInterface);
+
+        return $record;
     }
 
     /**
@@ -106,12 +108,11 @@ final class DNSRecordCollection extends EntityAbstract implements
             throw new InvalidArgumentDnsServerException('Invalid value');
         }
 
-        $this->records->offsetSet($offset, /** @scrutinizer ignore-type */ $value);
+        // Ensure offset is int|null for ArrayIterator
+        $safeOffset = is_int($offset) || is_null($offset) ? $offset : null;
+        $this->records->offsetSet($safeOffset, $value);
     }
 
-    /**
-     * @param mixed $offset
-     */
     public function offsetUnset($offset): void
     {
         $this->records->offsetUnset($offset);
@@ -124,28 +125,57 @@ final class DNSRecordCollection extends EntityAbstract implements
 
     public function isEmpty(): bool
     {
-        return $this->count() === 0;
+        return 0 === $this->count();
     }
 
     public function __serialize(): array
     {
-        return $this->records->getArrayCopy();
+        return ['records' => $this->records->getArrayCopy()];
     }
 
-    public function __unserialize(array $unserialized): void
+    /** @param array<string, mixed> $data */
+    public function __unserialize(array $data): void
     {
-        $this->records = new ArrayIterator($unserialized);
+        if (isset($data['records']) && is_array($data['records'])) {
+            // Validate and filter to ensure all elements are DNSRecordInterface
+            $filtered = array_filter(
+                $data['records'],
+                fn ($item) => $item instanceof DNSRecordInterface
+            );
+            /** @var array<int, DNSRecordInterface> $reindexed */
+            $reindexed = array_values($filtered);
+            $this->records = new \ArrayIterator($reindexed);
+        } else {
+            // Backward compatibility: assume direct array of records
+            $filtered = array_filter(
+                $data,
+                fn ($item) => $item instanceof DNSRecordInterface
+            );
+            /** @var array<int, DNSRecordInterface> $reindexed */
+            $reindexed = array_values($filtered);
+            $this->records = new \ArrayIterator($reindexed);
+        }
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     public function jsonSerialize(): array
     {
-        return $this->toArray();
+        // Convert array<int, DNSRecordInterface> to array<string, array<string, mixed>> by serializing each record
+        $result = [];
+        $index = 0;
+        foreach ($this->toArray() as $record) {
+            $result['record_' . $index++] = $record->jsonSerialize();
+        }
+
+        return $result;
     }
 
     public function withUniqueValuesExcluded(): self
     {
         return $this->filterValues(
-            fn(DNSRecordInterface $candidateRecord, DNSRecordCollection $remaining): bool => $remaining->has(
+            fn (DNSRecordInterface $candidateRecord, DNSRecordCollection $remaining): bool => $remaining->has(
                 $candidateRecord
             )
         )->withUniqueValues();
@@ -154,7 +184,7 @@ final class DNSRecordCollection extends EntityAbstract implements
     public function withUniqueValues(): self
     {
         return $this->filterValues(
-            fn(DNSRecordInterface $candidateRecord, DNSRecordCollection $remaining): bool => !$remaining->has(
+            fn (DNSRecordInterface $candidateRecord, DNSRecordCollection $remaining): bool => !$remaining->has(
                 $candidateRecord
             )
         );
@@ -165,7 +195,7 @@ final class DNSRecordCollection extends EntityAbstract implements
         $filtered = new self();
         $records = $this->records->getArrayCopy();
 
-        while (($record = array_shift($records)) !== null) {
+        while (($record = \array_shift($records)) !== null) {
             if ($eval($record, new self(...$records))) {
                 $filtered[] = $record;
             }

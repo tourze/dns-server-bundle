@@ -24,6 +24,7 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
     /**
      * 互联网类
      * 最常用的记录类，用于互联网DNS记录
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.4
      */
     case IN = 1;          // 互联网
@@ -31,6 +32,7 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
     /**
      * CSNET类
      * 用于CSNET网络（已废弃）
+     *
      * @deprecated
      */
     case CS = 2;          // CSNET类 (已废弃)
@@ -38,6 +40,7 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
     /**
      * CHAOS类
      * 用于MIT Chaos网络
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc973
      */
     case CH = 3;          // CHAOS类
@@ -45,6 +48,7 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
     /**
      * Hesiod类
      * MIT Athena项目使用的名称服务
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.4
      */
     case HS = 4;          // Hesiod类
@@ -52,6 +56,7 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
     /**
      * 任意类
      * 用于查询时匹配任意记录类
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.4
      */
     case ANY = 255;       // 任意类
@@ -63,7 +68,7 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
      */
     public function getName(): string
     {
-        return match($this) {
+        return match ($this) {
             self::IN => 'IN',
             self::CS => 'CS',
             self::CH => 'CH',
@@ -79,7 +84,7 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::IN => '互联网',
             self::CS => 'CSNET类 (已废弃)',
             self::CH => 'CHAOS类',
@@ -92,11 +97,12 @@ enum RecordClass: int implements Itemable, Labelable, Selectable
      * 根据名称获取记录类
      *
      * @param string $name 记录类的名称
+     *
      * @return self|null 返回对应的记录类枚举值，如果不存在则返回null
      */
     public static function fromName(string $name): ?self
     {
-        return match(strtoupper($name)) {
+        return match (strtoupper($name)) {
             'IN' => self::IN,
             'CS' => self::CS,
             'CH' => self::CH,

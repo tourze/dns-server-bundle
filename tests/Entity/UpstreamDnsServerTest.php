@@ -5,27 +5,78 @@ namespace DnsServerBundle\Tests\Entity;
 use DnsServerBundle\Entity\UpstreamDnsServer;
 use DnsServerBundle\Enum\DnsProtocolEnum;
 use DnsServerBundle\Enum\MatchStrategy;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitDoctrineEntity\AbstractEntityTestCase;
 
-class UpstreamDnsServerTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(UpstreamDnsServer::class)]
+final class UpstreamDnsServerTest extends AbstractEntityTestCase
 {
-    private UpstreamDnsServer $server;
-    
-    protected function setUp(): void
+    /**
+     * @return array<string, array{string, mixed}>
+     */
+    public static function propertiesProvider(): array
     {
-        $this->server = new UpstreamDnsServer();
-        
-        // 初始化必要属性以避免null错误
-        $this->server->setName('Test Server')
-            ->setHost('8.8.8.8')
-            ->setPattern('*')
-            ->setStrategy(MatchStrategy::WILDCARD);
+        return [
+            'name' => ['name', 'Test Server'],
+            'host' => ['host', '8.8.8.8'],
+            'port' => ['port', 5353],
+            'timeout' => ['timeout', 10],
+            'weight' => ['weight', 5],
+            'description' => ['description', 'Test description'],
+            'pattern' => ['pattern', '*.example.com'],
+            'strategy' => ['strategy', MatchStrategy::SUFFIX],
+            'isDefault' => ['isDefault', true],
+            'isDefaultFalse' => ['isDefault', false],
+            'customAnswers' => ['customAnswers', ['192.168.1.1', '192.168.1.2']],
+            'ttl' => ['ttl', 600],
+            'protocol' => ['protocol', DnsProtocolEnum::DOH],
+            'certPath' => ['certPath', '/path/to/cert.pem'],
+            'keyPath' => ['keyPath', '/path/to/key.pem'],
+            'verifyCert' => ['verifyCert', true],
+            'verifyCertFalse' => ['verifyCert', false],
+            'valid' => ['valid', true],
+            'validFalse' => ['valid', false],
+            'createdBy' => ['createdBy', 'admin'],
+            'updatedBy' => ['updatedBy', 'admin'],
+            'createdFromIp' => ['createdFromIp', '127.0.0.1'],
+            'updatedFromIp' => ['updatedFromIp', '127.0.0.1'],
+        ];
     }
-    
+
+    protected function createEntity(): object
+    {
+        $entity = new UpstreamDnsServer();
+        $entity->setName('Test Server');
+        $entity->setHost('8.8.8.8');
+        $entity->setPort(5353);
+        $entity->setTimeout(10);
+        $entity->setWeight(5);
+        $entity->setDescription('Test description');
+        $entity->setPattern('*.example.com');
+        $entity->setStrategy(MatchStrategy::SUFFIX);
+        $entity->setIsDefault(true);
+        $entity->setCustomAnswers(['192.168.1.1', '192.168.1.2']);
+        $entity->setTtl(600);
+        $entity->setProtocol(DnsProtocolEnum::DOH);
+        $entity->setCertPath('/path/to/cert.pem');
+        $entity->setKeyPath('/path/to/key.pem');
+        $entity->setVerifyCert(true);
+        $entity->setValid(true);
+        $entity->setCreatedBy('admin');
+        $entity->setUpdatedBy('admin');
+        $entity->setCreatedFromIp('127.0.0.1');
+        $entity->setUpdatedFromIp('127.0.0.1');
+
+        return $entity;
+    }
+
     public function testDefaultValues(): void
     {
         $server = new UpstreamDnsServer();
-        $this->assertSame(0, $server->getId());
+        $this->assertNull($server->getId());
         $this->assertSame(53, $server->getPort());
         $this->assertSame(5, $server->getTimeout());
         $this->assertSame(1, $server->getWeight());
@@ -35,187 +86,210 @@ class UpstreamDnsServerTest extends TestCase
         $this->assertFalse($server->isDefault());
         $this->assertFalse($server->isValid());
     }
-    
+
     public function testSetGetName(): void
     {
         $name = 'Test Server';
-        $this->assertSame($this->server, $this->server->setName($name));
-        $this->assertSame($name, $this->server->getName());
+        $server = new UpstreamDnsServer();
+        $server->setName($name);
+        $this->assertSame($name, $server->getName());
     }
-    
+
     public function testSetGetHost(): void
     {
         $host = '8.8.8.8';
-        $this->assertSame($this->server, $this->server->setHost($host));
-        $this->assertSame($host, $this->server->getHost());
+        $server = new UpstreamDnsServer();
+        $server->setHost($host);
+        $this->assertSame($host, $server->getHost());
     }
-    
+
     public function testSetGetPort(): void
     {
         $port = 5353;
-        $this->assertSame($this->server, $this->server->setPort($port));
-        $this->assertSame($port, $this->server->getPort());
+        $server = new UpstreamDnsServer();
+        $server->setPort($port);
+        $this->assertSame($port, $server->getPort());
     }
-    
+
     public function testSetGetTimeout(): void
     {
         $timeout = 10;
-        $this->assertSame($this->server, $this->server->setTimeout($timeout));
-        $this->assertSame($timeout, $this->server->getTimeout());
+        $server = new UpstreamDnsServer();
+        $server->setTimeout($timeout);
+        $this->assertSame($timeout, $server->getTimeout());
     }
-    
+
     public function testSetGetWeight(): void
     {
         $weight = 5;
-        $this->assertSame($this->server, $this->server->setWeight($weight));
-        $this->assertSame($weight, $this->server->getWeight());
+        $server = new UpstreamDnsServer();
+        $server->setWeight($weight);
+        $this->assertSame($weight, $server->getWeight());
     }
-    
+
     public function testSetGetDescription(): void
     {
         $description = 'Test description';
-        $this->assertSame($this->server, $this->server->setDescription($description));
-        $this->assertSame($description, $this->server->getDescription());
+        $server = new UpstreamDnsServer();
+        $server->setDescription($description);
+        $this->assertSame($description, $server->getDescription());
     }
-    
+
     public function testSetGetPattern(): void
     {
         $pattern = '*.example.com';
-        $this->assertSame($this->server, $this->server->setPattern($pattern));
-        $this->assertSame($pattern, $this->server->getPattern());
+        $server = new UpstreamDnsServer();
+        $server->setPattern($pattern);
+        $this->assertSame($pattern, $server->getPattern());
     }
-    
+
     public function testSetGetStrategy(): void
     {
         $strategy = MatchStrategy::SUFFIX;
-        $this->assertSame($this->server, $this->server->setStrategy($strategy));
-        $this->assertSame($strategy, $this->server->getStrategy());
+        $server = new UpstreamDnsServer();
+        $server->setStrategy($strategy);
+        $this->assertSame($strategy, $server->getStrategy());
     }
-    
+
     public function testSetIsDefault(): void
     {
-        $this->assertSame($this->server, $this->server->setIsDefault(true));
-        $this->assertTrue($this->server->isDefault());
-        
-        $this->assertSame($this->server, $this->server->setIsDefault(false));
-        $this->assertFalse($this->server->isDefault());
+        $server = new UpstreamDnsServer();
+        $server->setIsDefault(true);
+        $this->assertTrue($server->isDefault());
+
+        $server->setIsDefault(false);
+        $this->assertFalse($server->isDefault());
     }
-    
+
     public function testSetGetCustomAnswers(): void
     {
         $answers = ['192.168.1.1', '192.168.1.2'];
-        $this->assertSame($this->server, $this->server->setCustomAnswers($answers));
-        $this->assertSame($answers, $this->server->getCustomAnswers());
+        $server = new UpstreamDnsServer();
+        $server->setCustomAnswers($answers);
+        $this->assertSame($answers, $server->getCustomAnswers());
     }
-    
+
     public function testSetGetTtl(): void
     {
         $ttl = 600;
-        $this->assertSame($this->server, $this->server->setTtl($ttl));
-        $this->assertSame($ttl, $this->server->getTtl());
+        $server = new UpstreamDnsServer();
+        $server->setTtl($ttl);
+        $this->assertSame($ttl, $server->getTtl());
     }
-    
+
     public function testSetGetProtocol(): void
     {
         $protocol = DnsProtocolEnum::DOH;
-        $this->assertSame($this->server, $this->server->setProtocol($protocol));
-        $this->assertSame($protocol, $this->server->getProtocol());
+        $server = new UpstreamDnsServer();
+        $server->setProtocol($protocol);
+        $this->assertSame($protocol, $server->getProtocol());
     }
-    
+
     public function testSetGetCertPath(): void
     {
         $certPath = '/path/to/cert.pem';
-        $this->assertSame($this->server, $this->server->setCertPath($certPath));
-        $this->assertSame($certPath, $this->server->getCertPath());
+        $server = new UpstreamDnsServer();
+        $server->setCertPath($certPath);
+        $this->assertSame($certPath, $server->getCertPath());
     }
-    
+
     public function testSetGetKeyPath(): void
     {
         $keyPath = '/path/to/key.pem';
-        $this->assertSame($this->server, $this->server->setKeyPath($keyPath));
-        $this->assertSame($keyPath, $this->server->getKeyPath());
+        $server = new UpstreamDnsServer();
+        $server->setKeyPath($keyPath);
+        $this->assertSame($keyPath, $server->getKeyPath());
     }
-    
+
     public function testSetVerifyCert(): void
     {
-        $this->assertSame($this->server, $this->server->setVerifyCert(false));
-        $this->assertFalse($this->server->isVerifyCert());
-        
-        $this->assertSame($this->server, $this->server->setVerifyCert(true));
-        $this->assertTrue($this->server->isVerifyCert());
+        $server = new UpstreamDnsServer();
+        $server->setVerifyCert(false);
+        $this->assertFalse($server->isVerifyCert());
+
+        $server->setVerifyCert(true);
+        $this->assertTrue($server->isVerifyCert());
     }
-    
+
     public function testSetValid(): void
     {
-        $this->assertSame($this->server, $this->server->setValid(true));
-        $this->assertTrue($this->server->isValid());
-        
-        $this->assertSame($this->server, $this->server->setValid(false));
-        $this->assertFalse($this->server->isValid());
+        $server = new UpstreamDnsServer();
+        $server->setValid(true);
+        $this->assertTrue($server->isValid());
+
+        $server->setValid(false);
+        $this->assertFalse($server->isValid());
     }
-    
+
     public function testRetrievePlainArray(): void
     {
-        $this->server->setName('Test Server')
-            ->setHost('8.8.8.8')
-            ->setPort(53)
-            ->setPattern('*.example.com')
-            ->setStrategy(MatchStrategy::SUFFIX);
-            
-        $array = $this->server->retrievePlainArray();
+        $server = new UpstreamDnsServer();
+        $server->setName('Test Server');
+        $server->setHost('8.8.8.8');
+        $server->setPort(53);
+        $server->setPattern('*.example.com');
+        $server->setStrategy(MatchStrategy::SUFFIX);
+
+        $array = $server->retrievePlainArray();
         $this->assertArrayHasKey('id', $array);
         $this->assertArrayHasKey('name', $array);
         $this->assertArrayHasKey('host', $array);
         $this->assertArrayHasKey('port', $array);
         $this->assertArrayHasKey('pattern', $array);
         $this->assertArrayHasKey('strategy', $array);
-        
+
         $this->assertSame('Test Server', $array['name']);
         $this->assertSame('8.8.8.8', $array['host']);
         $this->assertSame(53, $array['port']);
         $this->assertSame('*.example.com', $array['pattern']);
         $this->assertSame('suffix', $array['strategy']);
     }
-    
+
     public function testRetrieveApiArray(): void
     {
-        $array = $this->server->retrieveApiArray();
+        $server = new UpstreamDnsServer();
+        $array = $server->retrieveApiArray();
         $this->assertArrayHasKey('id', $array);
         $this->assertArrayHasKey('name', $array);
     }
-    
+
     public function testRetrieveAdminArray(): void
     {
-        $array = $this->server->retrieveAdminArray();
+        $server = new UpstreamDnsServer();
+        $array = $server->retrieveAdminArray();
         $this->assertArrayHasKey('id', $array);
         $this->assertArrayHasKey('name', $array);
     }
-    
+
     public function testSetGetCreatedBy(): void
     {
         $createdBy = 'admin';
-        $this->assertSame($this->server, $this->server->setCreatedBy($createdBy));
-        $this->assertSame($createdBy, $this->server->getCreatedBy());
+        $server = new UpstreamDnsServer();
+        $server->setCreatedBy($createdBy);
+        $this->assertSame($createdBy, $server->getCreatedBy());
     }
-    
+
     public function testSetGetUpdatedBy(): void
     {
         $updatedBy = 'admin';
-        $this->assertSame($this->server, $this->server->setUpdatedBy($updatedBy));
-        $this->assertSame($updatedBy, $this->server->getUpdatedBy());
+        $server = new UpstreamDnsServer();
+        $server->setUpdatedBy($updatedBy);
+        $this->assertSame($updatedBy, $server->getUpdatedBy());
     }
-    
+
     public function testSetGetCreatedFromIp(): void
     {
         $ip = '127.0.0.1';
-        $this->assertSame($this->server, $this->server->setCreatedFromIp($ip));
-        $this->assertSame($ip, $this->server->getCreatedFromIp());
+        $server = new UpstreamDnsServer();
+        $server->setCreatedFromIp($ip);
+        $this->assertSame($ip, $server->getCreatedFromIp());
     }
-    
+
     public function testSetGetUpdatedFromIp(): void
     {
         $ip = '127.0.0.1';
-        $this->assertSame($this->server, $this->server->setUpdatedFromIp($ip));
-        $this->assertSame($ip, $this->server->getUpdatedFromIp());
+        $server = new UpstreamDnsServer();
+        $server->setUpdatedFromIp($ip);
+        $this->assertSame($ip, $server->getUpdatedFromIp());
     }
-} 
+}

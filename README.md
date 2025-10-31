@@ -1,129 +1,287 @@
-# DNS服务端
+# DNS Server Bundle
 
-## 技术实现
+[English](README.md) | [中文](README.zh-CN.md)
 
-DnsServerBundle 基于 RFC1035 规范实现了一个完整的 DNS 服务器。核心采用异步 I/O 处理 DNS 查询请求，支持 UDP/TCP 双协议。
+[![Latest Version](https://img.shields.io/packagist/v/tourze/dns-server-bundle.svg?style=flat-square)](https://packagist.org/packages/tourze/dns-server-bundle)
+[![PHP Version](https://img.shields.io/packagist/php-v/tourze/dns-server-bundle.svg?style=flat-square)](https://packagist.org/packages/tourze/dns-server-bundle)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/tourze/dns-server-bundle/ci.yml?style=flat-square)](https://github.com/tourze/dns-server-bundle/actions)
+[![Quality Score](https://img.shields.io/scrutinizer/g/tourze/dns-server-bundle.svg?style=flat-square)](https://scrutinizer-ci.com/g/tourze/dns-server-bundle)
+[![Code Coverage](https://img.shields.io/scrutinizer/coverage/g/tourze/dns-server-bundle.svg?style=flat-square)](https://scrutinizer-ci.com/g/tourze/dns-server-bundle)
+[![License](https://img.shields.io/packagist/l/tourze/dns-server-bundle.svg?style=flat-square)](https://packagist.org/packages/tourze/dns-server-bundle)
+[![Total Downloads](https://img.shields.io/packagist/dt/tourze/dns-server-bundle.svg?style=flat-square)](https://packagist.org/packages/tourze/dns-server-bundle)
 
-## 架构设计
+A comprehensive DNS server implementation for Symfony applications with async I/O support, 
+admin interface, and complete DNS record management.
 
-```mermaid
-graph TD
-    A[DNS请求] --> B[请求解析器]
-    B --> C[记录查询器]
-    C --> D[缓存层]
-    D --> E[存储层]
-    C --> F[转发器]
-    F --> G[上游DNS]
+## Table of Contents
+
+- [Features](#features)
+- [Dependencies](#dependencies)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Quick Start](#quick-start)
+- [Commands](#commands)
+- [Admin Interface](#admin-interface)
+- [Advanced Usage](#advanced-usage)
+- [Performance Considerations](#performance-considerations)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+
+- **Async DNS Server**: Built with ReactPHP for high-performance async I/O
+- **Multi-Protocol Support**: UDP and TCP DNS protocols
+- **Complete Record Types**: Support for A, AAAA, NS, CNAME, MX, TXT, SOA, PTR, SRV, 
+  CAA, and DNSSEC records
+- **Admin Interface**: EasyAdmin-based management interface for DNS records and logs
+- **Query Logging**: Comprehensive logging of DNS queries with IP tracking
+- **Upstream Forwarding**: Configurable upstream DNS servers with different protocols
+- **Flexible Matching**: Domain pattern matching strategies for selective forwarding
+- **Performance Optimized**: Built-in caching and query optimization
+
+## Dependencies
+
+### Required
+
+- **PHP**: ^8.1
+- **Symfony**: ^6.4 || ^7.0
+- **ReactPHP**: For async I/O operations
+- **Doctrine ORM**: For entity management
+- **EasyAdmin**: For admin interface
+
+### Optional
+
+- **Monolog**: For enhanced logging (recommended)
+- **Symfony Security**: For admin interface authentication
+
+## Installation
+
+```bash
+composer require tourze/dns-server-bundle
 ```
 
-### 核心组件
+Add the bundle to your `config/bundles.php`:
 
-- `DnsResolver`: DNS 报文解析器，处理 DNS 请求/响应的二进制格式转换
-- `RecordManager`: 记录管理器，负责 DNS 记录的 CRUD 操作
-- `CacheManager`: 缓存管理器，实现多级缓存策略
-- `QueryProcessor`: 查询处理器，处理 DNS 查询的核心逻辑
-- `Forwarder`: DNS 转发器，处理递归查询
-
-## 扩展机制
-
-Bundle 提供以下扩展点：
-
-1. 自定义记录解析器（实现 `RecordResolverInterface`）
-2. 缓存策略扩展（实现 `CacheStrategyInterface`）
-3. 查询拦截器（实现 `QueryInterceptorInterface`）
-
-## 技术限制
-
-1. 内存限制：缓存条目数默认限制为 10000 条
-2. 性能考虑：
-   - 单实例每秒查询处理能力：约 5000 QPS
-   - 缓存命中率低于 80% 时建议扩容
-   - 不支持 DNSSEC
-
-## 依赖关系
-
-- 核心依赖：
-  - `symfony/event-dispatcher`: 事件分发
-  - `symfony/cache`: 缓存实现
-  - `react/datagram`: UDP 协议支持
-  - `react/socket`: TCP 协议支持
-
-## 内部通信
-
-```mermaid
-sequenceDiagram
-    participant C as 客户端
-    participant R as 解析器
-    participant Q as 查询处理器
-    participant S as 存储层
-    
-    C->>R: DNS查询
-    R->>Q: 解析请求
-    Q->>S: 查询记录
-    S-->>Q: 返回结果
-    Q-->>R: 组装响应
-    R-->>C: DNS应答
+```php
+return [
+    // ...
+    DnsServerBundle\DnsServerBundle::class => ['all' => true],
+];
 ```
 
-## 性能优化
+## Configuration
 
-1. 采用 LRU 算法管理缓存
-2. 使用内存映射文件存储大量 DNS 记录
-3. 实现请求合并（Query Aggregation）减少上游查询
-4. 异步 I/O 处理提升并发性能
+### Service Configuration
 
-## 注意事项
+Configure the bundle in `config/services.yaml`:
 
-1. 需要 root 权限绑定 53 端口
-2. 建议在容器环境中运行
-3. 生产环境必须配置上游 DNS
-4. 建议启用 systemd 监控服务状态
-
-## 测试机制
-
-### 单元测试
-
-```mermaid
-graph LR
-    A[测试用例] --> B[Mock DNS请求]
-    B --> C[测试解析器]
-    C --> D[验证结果]
-    D --> E[覆盖率报告]
+```yaml
+services:
+    DnsServerBundle\Service\DnsWorkerService:
+        arguments:
+            $dnsQueryService: '@DnsServerBundle\Service\DnsQueryService'
+            $logger: '@logger'
+        tags:
+            - { name: 'monolog.logger', channel: 'dns' }
 ```
 
-1. 测试范围
-   - DNS 报文解析器（请求/响应格式转换）
-   - 记录管理器（CRUD 操作验证）
-   - 缓存管理器（缓存策略验证）
-   - 查询处理器（查询逻辑验证）
-   - 转发器（递归查询验证）
+### Database Entities
 
-2. 测试工具
-   - PHPUnit: 单元测试框架
-   - Prophecy: 模拟对象框架
-   - php-code-coverage: 代码覆盖率分析
+The bundle provides two main entities:
 
-### 集成测试
+- `DnsQueryLog`: Stores DNS query logs with IP tracking
+- `UpstreamDnsServer`: Manages upstream DNS server configurations
 
-1. 组件交互测试
-   - 完整 DNS 查询流程验证
-   - 缓存系统与存储层交互
-   - 事件分发机制验证
+## Quick Start
 
-2. 性能测试
-   - 并发查询压力测试
-   - 缓存命中率统计
-   - 响应时间监控
-   - 资源占用分析
+### 1. Database Setup
 
-### 测试数据集
+Run migrations to create the required tables:
 
-1. 标准测试数据
-   - RFC1035 规范示例数据
-   - 常见 DNS 记录类型
-   - 异常格式数据
+```bash
+php bin/console doctrine:migrations:migrate
+```
 
-2. 性能测试数据
-   - 大量域名查询样本
-   - 多类型记录混合
-   - 递归查询场景
+### 2. Start the DNS Server
+
+```bash
+php bin/console dns:worker:start --host=0.0.0.0 --port=53
+```
+
+### 3. Configure Upstream DNS Servers
+
+Access the admin interface at `/admin` and add upstream DNS servers:
+
+```php
+// Example upstream server configuration
+$upstream = new UpstreamDnsServer();
+$upstream->setName('Cloudflare DNS');
+$upstream->setHost('1.1.1.1');
+$upstream->setPort(53);
+$upstream->setProtocol(DnsProtocolEnum::UDP);
+$upstream->setMatchStrategy(MatchStrategy::SUFFIX);
+$upstream->setMatchPattern('*.example.com');
+```
+
+### 4. Basic Usage in Code
+
+```php
+use DnsServerBundle\Service\DnsQueryService;
+use DnsServerBundle\Service\DnsResolver;
+
+// Resolve DNS queries
+$resolver = new DnsResolver($upstreamServers);
+$result = $resolver->resolve('example.com', RecordType::A);
+
+// Handle DNS queries programmatically
+$queryService = new DnsQueryService($resolver, $logger);
+$response = $queryService->handleQuery($dnsMessage, $clientAddress, $server);
+```
+
+## Commands
+
+### DNS Worker
+
+Start the DNS server daemon:
+
+```bash
+# Start with default settings (0.0.0.0:53)
+php bin/console dns:worker:start
+
+# Start with custom host and port
+php bin/console dns:worker:start --host=127.0.0.1 --port=5353
+
+# Start with verbose logging
+php bin/console dns:worker:start -v
+```
+
+**Options:**
+- `--host`: DNS server binding host (default: 0.0.0.0)
+- `--port`: DNS server binding port (default: 53)
+
+**Note**: Port 53 requires root privileges on most systems.
+
+## Admin Interface
+
+The bundle integrates with EasyAdmin to provide:
+
+- **DNS Query Logs**: View and analyze DNS query history
+- **Upstream DNS Servers**: Manage upstream server configurations
+- **Real-time Monitoring**: Track DNS server performance and statistics
+
+Access the admin interface at `/admin` after proper authentication setup.
+
+## Advanced Usage
+
+### DNS Record Types
+
+Full support for DNS record types including:
+- **A/AAAA**: IPv4/IPv6 address records
+- **NS**: Name server records
+- **CNAME**: Canonical name records
+- **MX**: Mail exchange records
+- **TXT**: Text records
+- **SOA**: Start of authority records
+- **PTR**: Pointer records for reverse DNS
+- **SRV**: Service location records
+- **CAA**: Certificate Authority Authorization
+- **DNSSEC**: DS, RRSIG, NSEC, DNSKEY records
+
+### Match Strategies
+
+Configure how domains are matched for upstream forwarding:
+- **EXACT**: Exact domain match
+- **SUFFIX**: Domain suffix matching
+- **PREFIX**: Domain prefix matching
+- **REGEX**: Regular expression matching
+- **WILDCARD**: Wildcard pattern matching (e.g., `*.example.com`)
+
+### Protocol Support
+
+- **UDP**: Standard DNS over UDP (implemented)
+- **TCP**: DNS over TCP for large responses (implemented)
+- **DoH**: DNS over HTTPS (implemented)
+- **DoT**: DNS over TLS (implemented)
+
+### Upstream Server Configuration
+
+Configure multiple upstream DNS servers with different settings:
+
+```php
+use DnsServerBundle\Enum\DnsProtocolEnum;
+use DnsServerBundle\Enum\MatchStrategy;
+use DnsServerBundle\Entity\UpstreamDnsServer;
+
+// Configure DNS over TLS upstream
+$dotServer = new UpstreamDnsServer();
+$dotServer->setName('Cloudflare DoT')
+    ->setHost('1.1.1.1')
+    ->setPort(853)
+    ->setProtocol(DnsProtocolEnum::DOT)
+    ->setCertPath('/path/to/client.crt')
+    ->setKeyPath('/path/to/client.key')
+    ->setVerifyCert(true);
+
+// Configure DNS over HTTPS upstream
+$dohServer = new UpstreamDnsServer();
+$dohServer->setName('Google DoH')
+    ->setHost('dns.google')
+    ->setPort(443)
+    ->setProtocol(DnsProtocolEnum::DOH)
+    ->setPath('/dns-query');
+```
+
+### DNS Query Logging
+
+All DNS queries are automatically logged with detailed information:
+
+```php
+use DnsServerBundle\Entity\DnsQueryLog;
+
+// Query logs include:
+// - Domain name
+// - Query type (A, AAAA, MX, etc.)
+// - Client IP address
+// - Response code
+// - Response time
+// - Upstream server used
+// - Query timestamp
+```
+
+### Custom DNS Resolvers
+
+Create custom resolvers for specific use cases:
+
+```php
+use DnsServerBundle\Service\DnsResolver;
+use DnsServerBundle\Service\DnsMatcherService;
+
+$matcher = new DnsMatcherService();
+$resolver = new DnsResolver($upstreamServers, $matcher, $logger);
+
+// Add custom resolution logic
+$resolver->resolve('example.com', RecordType::A);
+```
+
+## Performance Considerations
+
+1. **Memory Usage**: Default cache limit is 10,000 entries
+2. **Query Performance**: ~5,000 QPS per instance
+3. **Cache Hit Rate**: Optimize for >80% cache hit rate
+4. **Concurrent Connections**: Async I/O handles thousands of concurrent queries
+
+## Security
+
+- **Query Logging**: All DNS queries are logged with IP tracking
+- **Access Control**: Configurable upstream server restrictions
+- **Rate Limiting**: Built-in query rate limiting (configurable)
+- **Input Validation**: Comprehensive DNS message validation
+
+## Contributing
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## License
+
+The MIT License (MIT). Please see [License File](LICENSE) for more information.

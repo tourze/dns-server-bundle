@@ -20,6 +20,7 @@ enum SecurityPolicy: string implements Itemable, Labelable, Selectable
 {
     use ItemTrait;
     use SelectTrait;
+
     /**
      * 开放模式
      * 最基本的安全级别，接受所有DNS请求，不进行额外的安全验证
@@ -37,6 +38,7 @@ enum SecurityPolicy: string implements Itemable, Labelable, Selectable
     /**
      * DNSSEC模式
      * 高安全级别，启用DNSSEC验证确保DNS应答的真实性
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc4033#section-3
      */
     case DNSSEC = 'dnssec';           // DNSSEC模式，支持DNSSEC验证
@@ -53,7 +55,7 @@ enum SecurityPolicy: string implements Itemable, Labelable, Selectable
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::OPEN => '开放模式，接受所有请求',
             self::RESTRICTED => '限制模式，只接受特定来源的请求',
             self::DNSSEC => 'DNSSEC模式，支持DNSSEC验证',
@@ -66,7 +68,7 @@ enum SecurityPolicy: string implements Itemable, Labelable, Selectable
      */
     public function shouldValidateSource(): bool
     {
-        return in_array($this, [self::RESTRICTED, self::STRICT]);
+        return in_array($this, [self::RESTRICTED, self::STRICT], true);
     }
 
     /**
@@ -74,7 +76,7 @@ enum SecurityPolicy: string implements Itemable, Labelable, Selectable
      */
     public function requiresDnssec(): bool
     {
-        return in_array($this, [self::DNSSEC, self::STRICT]);
+        return in_array($this, [self::DNSSEC, self::STRICT], true);
     }
 
     /**

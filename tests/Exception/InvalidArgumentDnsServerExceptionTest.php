@@ -6,36 +6,30 @@ namespace DnsServerBundle\Tests\Exception;
 
 use DnsServerBundle\Exception\DnsServerException;
 use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitBase\AbstractExceptionTestCase;
 
-class InvalidArgumentDnsServerExceptionTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(InvalidArgumentDnsServerException::class)]
+final class InvalidArgumentDnsServerExceptionTest extends AbstractExceptionTestCase
 {
-    public function testExceptionInheritance(): void
+    protected function getExceptionClass(): string
     {
-        $exception = new InvalidArgumentDnsServerException();
-        
-        // 验证继承关系
-        $this->assertInstanceOf(DnsServerException::class, $exception);
+        return InvalidArgumentDnsServerException::class;
     }
-    
-    public function testConstructor(): void
+
+    protected function getParentExceptionClass(): string
     {
-        $message = 'Invalid argument';
-        $code = 400;
-        $previous = new \Exception('Previous exception');
-        
-        $exception = new InvalidArgumentDnsServerException($message, $code, $previous);
-        
-        $this->assertSame($message, $exception->getMessage());
-        $this->assertSame($code, $exception->getCode());
-        $this->assertSame($previous, $exception->getPrevious());
+        return DnsServerException::class;
     }
-    
+
     public function testJsonSerialize(): void
     {
         $message = 'Invalid argument';
         $code = 400;
-        
+
         $exception = new InvalidArgumentDnsServerException($message, $code);
         $json = $exception->jsonSerialize();
         $this->assertArrayHasKey('message', $json);

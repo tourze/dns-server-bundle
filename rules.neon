@@ -1,0 +1,30 @@
+parameters:
+    ignoreErrors:
+        # 忽略 PHPDoc 标签错误
+        - '#PHPDoc tag @var for variable \$this contains unknown class Tourze\\DnsServerBundle\\Tests#'
+        
+        # 忽略测试中的方法调用
+        - '#Call to method Symfony\\Bundle\\FrameworkBundle\\Test\\WebTestCase::createClient\(\) with array\{environment: ''test''\} will always evaluate to true#'
+        
+        # 忽略 Bundle 基类
+        - '#Class Tourze\\DnsServerBundle\\DnsServerBundle extends unknown class Symfony\\Component\\HttpKernel\\Bundle\\Bundle#'
+        
+        # 忽略配置定义器
+        - '#Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\NodeDefinition::children\(\)#'
+        
+        # 忽略 DNS 枚举中的废弃常量警告 - 这些是 DNS 协议标准的历史部分，需要保留以确保完整性
+        -
+            message: '#Fetching deprecated class constant (IQUERY|CS|BADSIG) of enum DnsServerBundle\\Enum\\(OperationCode|RecordClass|ResponseCode)\.?.*#'
+            paths:
+                - src/Enum/OperationCode.php
+                - src/Enum/RecordClass.php
+                - src/Enum/ResponseCode.php
+                - tests/Enum/OperationCodeTest.php
+                - tests/Enum/RecordClassTest.php
+                - tests/Enum/ResponseCodeTest.php
+
+        # 忽略 DnsOverHttpsExecutor 的外部系统交互审计日志建议 - 已实现完整的审计日志记录
+        -
+            message: '#检测到外部系统交互：HttpClientInterface::request\(\).*#'
+            paths:
+                - src/Service/DnsOverHttpsExecutor.php

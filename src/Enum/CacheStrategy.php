@@ -20,6 +20,7 @@ enum CacheStrategy: string implements Itemable, Labelable, Selectable
 {
     use ItemTrait;
     use SelectTrait;
+
     /**
      * 不缓存
      * 不使用任何缓存，所有查询都直接转发到上游服务器
@@ -58,9 +59,9 @@ enum CacheStrategy: string implements Itemable, Labelable, Selectable
     /**
      * 获取缓存策略的描述
      */
-    public function getDescription(): string
+    public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             self::NONE => '不缓存',
             self::MEMORY => '内存缓存',
             self::REDIS => 'Redis缓存',
@@ -69,17 +70,12 @@ enum CacheStrategy: string implements Itemable, Labelable, Selectable
         };
     }
 
-    public function getLabel(): string
-    {
-        return $this->getDescription();
-    }
-
     /**
      * 判断是否启用缓存
      */
     public function isEnabled(): bool
     {
-        return $this !== self::NONE;
+        return self::NONE !== $this;
     }
 
     /**
@@ -87,6 +83,6 @@ enum CacheStrategy: string implements Itemable, Labelable, Selectable
      */
     public function isPersistent(): bool
     {
-        return in_array($this, [self::REDIS, self::FILESYSTEM, self::HYBRID]);
+        return in_array($this, [self::REDIS, self::FILESYSTEM, self::HYBRID], true);
     }
 }

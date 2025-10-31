@@ -24,6 +24,7 @@ enum ForwardPolicy: string implements Itemable, Labelable, Selectable
      * 从不转发
      * 只使用本地解析，不会将查询转发给其他DNS服务器
      * 适用于权威DNS服务器或只需要本地解析的场景
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2308#section-2.1
      */
     case NEVER = 'never';
@@ -39,6 +40,7 @@ enum ForwardPolicy: string implements Itemable, Labelable, Selectable
      * 只转发，不查本地
      * 所有查询都直接转发到上游DNS服务器，不查询本地记录
      * 适用于纯转发DNS服务器或DNS代理服务器
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc5625#section-2
      */
     case ONLY = 'only';
@@ -47,6 +49,7 @@ enum ForwardPolicy: string implements Itemable, Labelable, Selectable
      * 条件转发
      * 根据域名或记录类型决定是否转发查询
      * 适用于需要针对特定域名或记录类型使用不同策略的场景
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc5625#section-3
      */
     case CONDITIONAL = 'conditional';
@@ -54,9 +57,9 @@ enum ForwardPolicy: string implements Itemable, Labelable, Selectable
     /**
      * 获取转发策略的描述
      */
-    public function getDescription(): string
+    public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             self::NEVER => '从不转发',
             self::FIRST => '先查本地，找不到再转发',
             self::ONLY => '只转发，不查本地',
@@ -64,17 +67,12 @@ enum ForwardPolicy: string implements Itemable, Labelable, Selectable
         };
     }
 
-    public function getLabel(): string
-    {
-        return $this->getDescription();
-    }
-
     /**
      * 判断是否需要查询本地记录
      */
     public function shouldQueryLocal(): bool
     {
-        return in_array($this, [self::NEVER, self::FIRST, self::CONDITIONAL]);
+        return in_array($this, [self::NEVER, self::FIRST, self::CONDITIONAL], true);
     }
 
     /**
@@ -82,6 +80,6 @@ enum ForwardPolicy: string implements Itemable, Labelable, Selectable
      */
     public function shouldForward(): bool
     {
-        return in_array($this, [self::FIRST, self::ONLY, self::CONDITIONAL]);
+        return in_array($this, [self::FIRST, self::ONLY, self::CONDITIONAL], true);
     }
 }

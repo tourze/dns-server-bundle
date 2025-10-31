@@ -10,7 +10,7 @@ final class NSData extends DataAbstract implements \Stringable
 
     public function __toString(): string
     {
-        return (string)$this->target;
+        return (string) $this->target;
     }
 
     public function getTarget(): Hostname
@@ -21,12 +21,14 @@ final class NSData extends DataAbstract implements \Stringable
     public function toArray(): array
     {
         return [
-            'target' => (string)$this->target,
+            'target' => (string) $this->target,
         ];
     }
 
+    /** @param array<string, mixed> $unserialized */
     public function __unserialize(array $unserialized): void
     {
-        $this->target = new Hostname($unserialized['target']);
+        $rawTarget = $unserialized['target'] ?? '';
+        $this->target = new Hostname(is_string($rawTarget) ? $rawTarget : '');
     }
 }

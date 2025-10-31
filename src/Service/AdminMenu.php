@@ -13,29 +13,35 @@ use Tourze\EasyAdminMenuBundle\Service\MenuProviderInterface;
  * DNS服务器管理菜单服务
  */
 #[AutoconfigureTag(name: 'easy_admin.menu_provider')]
-class AdminMenu implements MenuProviderInterface
+readonly class AdminMenu implements MenuProviderInterface
 {
     public function __construct(
-        private readonly LinkGeneratorInterface $linkGenerator,
+        private LinkGeneratorInterface $linkGenerator,
     ) {
     }
 
     public function __invoke(ItemInterface $item): void
     {
-        if ($item->getChild('DNS服务器') === null) {
+        if (null === $item->getChild('DNS服务器')) {
             $item->addChild('DNS服务器');
         }
 
         $dnsMenu = $item->getChild('DNS服务器');
 
+        if (null === $dnsMenu) {
+            return;
+        }
+
         // 上游DNS服务器管理菜单
         $dnsMenu->addChild('上游DNS服务器')
             ->setUri($this->linkGenerator->getCurdListPage(UpstreamDnsServer::class))
-            ->setAttribute('icon', 'fas fa-server');
+            ->setAttribute('icon', 'fas fa-server')
+        ;
 
         // DNS查询日志菜单
         $dnsMenu->addChild('DNS查询日志')
             ->setUri($this->linkGenerator->getCurdListPage(DnsQueryLog::class))
-            ->setAttribute('icon', 'fas fa-history');
+            ->setAttribute('icon', 'fas fa-history')
+        ;
     }
 }

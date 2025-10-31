@@ -3,9 +3,6 @@
 namespace DnsServerBundle\Model;
 
 use DnsServerBundle\Exception\InvalidArgumentDnsServerException;
-use function array_flip;
-use function in_array;
-use function strtoupper;
 
 final class DNSRecordType extends EntityAbstract implements \Stringable
 {
@@ -58,18 +55,14 @@ final class DNSRecordType extends EntityAbstract implements \Stringable
         255 => DNSRecordType::TYPE_ANY,
     ];
 
-    private string $type;
-
     /**
-     * @throws \DnsServerBundle\Exception\InvalidArgumentDnsServerException
+     * @throws InvalidArgumentDnsServerException
      */
-    public function __construct(string $type)
+    public function __construct(private readonly string $type)
     {
-        if (!in_array($type, self::VALID_TYPES, true)) {
+        if (!\in_array($type, self::VALID_TYPES, true)) {
             throw new InvalidArgumentDnsServerException("{$type} is not an existing DNS record type");
         }
-
-        $this->type = $type;
     }
 
     public function __toString(): string
@@ -78,7 +71,7 @@ final class DNSRecordType extends EntityAbstract implements \Stringable
     }
 
     /**
-     * @throws \DnsServerBundle\Exception\InvalidArgumentDnsServerException
+     * @throws InvalidArgumentDnsServerException
      */
     public static function createFromInt(int $code): DNSRecordType
     {
@@ -96,17 +89,17 @@ final class DNSRecordType extends EntityAbstract implements \Stringable
 
     public function toInt(): int
     {
-        return array_flip(self::CODE_TYPE_MAP)[$this->type];
+        return \array_flip(self::CODE_TYPE_MAP)[$this->type];
     }
 
     public function isA(string $type): bool
     {
-        return $this->type === strtoupper($type);
+        return $this->type === \strtoupper($type);
     }
 
     public function equals(DNSRecordType $recordType): bool
     {
-        return $this->type === (string)$recordType;
+        return $this->type === (string) $recordType;
     }
 
     public static function createA(): self

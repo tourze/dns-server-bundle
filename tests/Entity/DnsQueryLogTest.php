@@ -4,107 +4,145 @@ namespace DnsServerBundle\Tests\Entity;
 
 use DnsServerBundle\Entity\DnsQueryLog;
 use DnsServerBundle\Enum\RecordType;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitDoctrineEntity\AbstractEntityTestCase;
 
-class DnsQueryLogTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(DnsQueryLog::class)]
+final class DnsQueryLogTest extends AbstractEntityTestCase
 {
-    private DnsQueryLog $log;
-    
-    protected function setUp(): void
+    /**
+     * @return array<string, array{string, mixed}>
+     */
+    public static function propertiesProvider(): array
     {
-        $this->log = new DnsQueryLog();
-        
-        // 初始化必需字段
-        $this->log->setDomain('example.com')
-            ->setClientIp('192.168.1.1')
-            ->setQueryType(RecordType::A);
+        return [
+            'domain' => ['domain', 'example.com'],
+            'clientIp' => ['clientIp', '192.168.1.1'],
+            'queryType' => ['queryType', RecordType::A],
+            'responseTime' => ['responseTime', 150],
+            'response' => ['response', 'base64encodedresponse'],
+            'isHit' => ['isHit', true],
+            'isHitFalse' => ['isHit', false],
+            'createTime' => ['createTime', new \DateTimeImmutable()],
+        ];
     }
-    
+
+    protected function createEntity(): object
+    {
+        $entity = new DnsQueryLog();
+        $entity->setDomain('example.com');
+        $entity->setClientIp('192.168.1.1');
+        $entity->setQueryType(RecordType::A);
+        $entity->setResponseTime(150);
+        $entity->setResponse('base64encodedresponse');
+        $entity->setIsHit(true);
+        $entity->setCreateTime(new \DateTimeImmutable());
+
+        return $entity;
+    }
+
     public function testDefaultValues(): void
     {
         $newLog = new DnsQueryLog();
-        $newLog->setDomain('test.com')
-            ->setClientIp('192.168.1.1')
-            ->setQueryType(RecordType::A);
-        
-        $this->assertSame(0, $newLog->getId());
+        $newLog->setDomain('test.com');
+        $newLog->setClientIp('192.168.1.1');
+        $newLog->setQueryType(RecordType::A);
+
+        $this->assertNull($newLog->getId());
         $this->assertFalse($newLog->isHit());
         $this->assertSame(0, $newLog->getResponseTime());
         $this->assertNull($newLog->getResponse());
         $this->assertNull($newLog->getCreateTime());
     }
-    
+
     public function testSetGetDomain(): void
     {
         $domain = 'test.example.com';
-        $this->assertSame($this->log, $this->log->setDomain($domain));
-        $this->assertSame($domain, $this->log->getDomain());
+        $log = new DnsQueryLog();
+        $log->setDomain($domain);
+        $this->assertSame($domain, $log->getDomain());
     }
-    
+
     public function testSetGetClientIp(): void
     {
         $ip = '192.168.1.2';
-        $this->assertSame($this->log, $this->log->setClientIp($ip));
-        $this->assertSame($ip, $this->log->getClientIp());
+        $log = new DnsQueryLog();
+        $log->setClientIp($ip);
+        $this->assertSame($ip, $log->getClientIp());
     }
-    
+
     public function testSetGetQueryType(): void
     {
         $type = RecordType::AAAA;
-        $this->assertSame($this->log, $this->log->setQueryType($type));
-        $this->assertSame($type, $this->log->getQueryType());
+        $log = new DnsQueryLog();
+        $log->setQueryType($type);
+        $this->assertSame($type, $log->getQueryType());
     }
-    
+
     public function testSetGetResponseTime(): void
     {
         $time = 150;
-        $this->assertSame($this->log, $this->log->setResponseTime($time));
-        $this->assertSame($time, $this->log->getResponseTime());
+        $log = new DnsQueryLog();
+        $log->setResponseTime($time);
+        $this->assertSame($time, $log->getResponseTime());
     }
-    
+
     public function testSetGetResponse(): void
     {
         $response = 'base64encodedresponse';
-        $this->assertSame($this->log, $this->log->setResponse($response));
-        $this->assertSame($response, $this->log->getResponse());
+        $log = new DnsQueryLog();
+        $log->setResponse($response);
+        $this->assertSame($response, $log->getResponse());
     }
-    
+
     public function testSetIsHit(): void
     {
-        $this->assertSame($this->log, $this->log->setIsHit(true));
-        $this->assertTrue($this->log->isHit());
-        
-        $this->assertSame($this->log, $this->log->setIsHit(false));
-        $this->assertFalse($this->log->isHit());
+        $log = new DnsQueryLog();
+        $log->setIsHit(true);
+        $this->assertTrue($log->isHit());
+
+        $log->setIsHit(false);
+        $this->assertFalse($log->isHit());
     }
-    
+
     public function testSetGetCreateTime(): void
     {
         $date = new \DateTimeImmutable();
-        $this->assertSame($this->log, $this->log->setCreateTime($date));
-        $this->assertSame($date, $this->log->getCreateTime());
+        $log = new DnsQueryLog();
+        $log->setCreateTime($date);
+        $this->assertSame($date, $log->getCreateTime());
     }
-    
+
     public function testToPlainArray(): void
     {
-        $array = $this->log->toPlainArray();
+        $log = new DnsQueryLog();
+        $log->setDomain('example.com');
+        $log->setClientIp('192.168.1.1');
+        $log->setQueryType(RecordType::A);
+
+        $array = $log->toPlainArray();
         $this->assertArrayHasKey('id', $array);
         $this->assertArrayHasKey('domain', $array);
         $this->assertArrayHasKey('queryType', $array);
         $this->assertArrayHasKey('clientIp', $array);
     }
-    
+
     public function testRetrievePlainArray(): void
     {
-        $this->log->setDomain('example.com');
-        $array = $this->log->retrievePlainArray();
+        $log = new DnsQueryLog();
+        $log->setDomain('example.com');
+        $array = $log->retrievePlainArray();
         $this->assertEquals('example.com', $array['domain']);
     }
-    
+
     public function testRetrieveAdminArray(): void
     {
-        $this->log->setDomain('example.com');
-        $array = $this->log->retrieveAdminArray();
+        $log = new DnsQueryLog();
+        $log->setDomain('example.com');
+        $array = $log->retrieveAdminArray();
         $this->assertEquals('example.com', $array['domain']);
     }
-} 
+}

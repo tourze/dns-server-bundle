@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace DnsServerBundle\Service;
 
 use DnsServerBundle\Entity\UpstreamDnsServer;
-use DnsServerBundle\Exception\QueryFailure;
+use DnsServerBundle\Exception\GeneralQueryFailureException;
 use React\Dns\Model\Message;
 use React\Dns\Protocol\BinaryDumper;
 use React\Dns\Protocol\Parser;
 use React\Dns\Query\ExecutorInterface;
 use React\Dns\Query\Query;
 use React\Promise\PromiseInterface;
+
 use function React\Promise\reject;
 use function React\Promise\resolve;
 
@@ -41,7 +42,9 @@ class DnsOverTlsExecutor implements ExecutorInterface
                 ],
             ]);
 
-            $socket = stream_socket_client(
+            $errno = 0;
+            $errstr = '';
+            $socket = @stream_socket_client(
                 'tls://' . $this->server->getHost() . ':' . $this->server->getPort(),
                 $errno,
                 $errstr,
@@ -50,8 +53,9 @@ class DnsOverTlsExecutor implements ExecutorInterface
                 $context
             );
 
-            if (!$socket) {
-                throw new QueryFailure("Failed to connect to DoT server: $errstr");
+            if (false === $socket) {
+                $errorMessage = is_string($errstr) ? $errstr : 'Unknown error';
+                throw new GeneralQueryFailureException('Failed to connect to DoT server: ' . $errorMessage);
             }
 
             // Send DNS query
@@ -62,23 +66,30 @@ class DnsOverTlsExecutor implements ExecutorInterface
 
             // Read response length
             $lengthBin = fread($socket, 2);
-            if (strlen($lengthBin) !== 2) {
-                throw new QueryFailure('Failed to read response length');
+            if (false === $lengthBin || 2 !== strlen($lengthBin)) {
+                throw new GeneralQueryFailureException('Failed to read response length');
             }
-            $length = unpack('n', $lengthBin)[1];
+            $unpackResult = unpack('n', $lengthBin);
+            if (false === $unpackResult) {
+                throw new GeneralQueryFailureException('Failed to unpack response length');
+            }
+            $lengthValue = $unpackResult[1];
+            assert(is_int($lengthValue));
+            $length = max(1, $lengthValue);
 
             // Read response
             $response = fread($socket, $length);
             fclose($socket);
 
-            if (strlen($response) !== $length) {
-                throw new QueryFailure('Incomplete response received');
+            if (false === $response || strlen($response) !== $length) {
+                throw new GeneralQueryFailureException('Incomplete response received');
             }
 
             $responseMessage = $this->parser->parseMessage($response);
+
             return resolve($responseMessage);
         } catch (\Throwable $e) {
-            return reject(new QueryFailure('DoT query failed: ' . $e->getMessage()));
+            return reject(new GeneralQueryFailureException('DoT query failed: ' . $e->getMessage()));
         }
     }
 }

@@ -14,31 +14,37 @@ use Tourze\Arrayable\AdminArrayInterface;
 use Tourze\Arrayable\ApiArrayInterface;
 use Tourze\Arrayable\PlainArrayInterface;
 use Tourze\DoctrineIndexedBundle\Attribute\IndexColumn;
-use Tourze\DoctrineIpBundle\Attribute\CreateIpColumn;
-use Tourze\DoctrineIpBundle\Attribute\UpdateIpColumn;
+use Tourze\DoctrineIpBundle\Traits\IpTraceableAware;
 use Tourze\DoctrineTrackBundle\Attribute\TrackColumn;
 use Tourze\DoctrineUserBundle\Traits\BlameableAware;
 
+/**
+ * @implements PlainArrayInterface<string, mixed>
+ * @implements ApiArrayInterface<string, mixed>
+ * @implements AdminArrayInterface<string, mixed>
+ */
 #[ORM\Entity(repositoryClass: UpstreamDnsServerRepository::class)]
 #[ORM\Table(name: 'dns_upstream_server', options: ['comment' => '上游DNS服务器'])]
 class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, AdminArrayInterface, \Stringable
 {
     use BlameableAware;
+    use IpTraceableAware;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => 'ID'])]
-    private ?int $id = 0;
+    private ?int $id = null;
 
     #[ORM\Column(length: 64, options: ['comment' => '服务器名称'])]
     #[Assert\NotBlank]
     #[Assert\Length(max: 64)]
     #[IndexColumn]
-    private string $name;
+    private string $name = '';
 
     #[ORM\Column(length: 255, options: ['comment' => '服务器地址'])]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
-    private string $host;
+    private string $host = '';
 
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => '端口号'])]
     #[Assert\NotBlank]
@@ -56,48 +62,60 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
     private int $weight = 1;
 
     #[ORM\Column(type: Types::TEXT, nullable: true, options: ['comment' => '描述'])]
+    #[Assert\Length(max: 65535)]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, options: ['comment' => '域名匹配模式'])]
-    private string $pattern;
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
+    private string $pattern = '';
 
     #[ORM\Column(type: Types::STRING, enumType: MatchStrategy::class, options: ['comment' => '匹配策略'])]
-    private MatchStrategy $strategy;
+    #[Assert\NotNull]
+    #[Assert\Choice(callback: [MatchStrategy::class, 'cases'])]
+    private MatchStrategy $strategy = MatchStrategy::EXACT;
 
     #[ORM\Column(options: ['comment' => '是否为默认服务器'])]
+    #[Assert\NotNull]
+    #[Assert\Type(type: 'boolean')]
     private bool $isDefault = false;
 
+    /**
+     * @var array<int, string>|null
+     */
     #[ORM\Column(type: Types::JSON, nullable: true, options: ['comment' => '自定义应答IP列表'])]
+    #[Assert\Type(type: 'array')]
     private ?array $customAnswers = null;
 
     #[ORM\Column(type: Types::INTEGER, options: ['comment' => 'TTL(秒)'])]
+    #[Assert\NotNull]
+    #[Assert\Type(type: 'integer')]
+    #[Assert\PositiveOrZero]
     private int $ttl = 300;
 
     #[ORM\Column(type: Types::STRING, enumType: DnsProtocolEnum::class, options: ['comment' => 'DNS协议类型'])]
+    #[Assert\NotNull]
+    #[Assert\Choice(callback: [DnsProtocolEnum::class, 'cases'])]
     private DnsProtocolEnum $protocol = DnsProtocolEnum::UDP;
 
     #[ORM\Column(length: 255, nullable: true, options: ['comment' => '证书路径'])]
+    #[Assert\Length(max: 255)]
     private ?string $certPath = null;
 
     #[ORM\Column(length: 255, nullable: true, options: ['comment' => '私钥路径'])]
+    #[Assert\Length(max: 255)]
     private ?string $keyPath = null;
 
     #[ORM\Column(type: Types::BOOLEAN, options: ['comment' => '是否验证证书', 'default' => true])]
+    #[Assert\NotNull]
+    #[Assert\Type(type: 'boolean')]
     private bool $verifyCert = true;
 
     #[IndexColumn]
     #[TrackColumn]
     #[ORM\Column(type: Types::BOOLEAN, nullable: true, options: ['comment' => '有效', 'default' => 0])]
+    #[Assert\Type(type: 'boolean')]
     private ?bool $valid = false;
-
-
-    #[CreateIpColumn]
-    #[ORM\Column(length: 128, nullable: true, options: ['comment' => '创建时IP'])]
-    private ?string $createdFromIp = null;
-
-    #[UpdateIpColumn]
-    #[ORM\Column(length: 128, nullable: true, options: ['comment' => '更新时IP'])]
-    private ?string $updatedFromIp = null;
 
     public function getId(): ?int
     {
@@ -109,10 +127,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $name): void
     {
         $this->name = $name;
-        return $this;
     }
 
     public function getHost(): string
@@ -120,10 +137,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->host;
     }
 
-    public function setHost(string $host): self
+    public function setHost(string $host): void
     {
         $this->host = $host;
-        return $this;
     }
 
     public function getPort(): int
@@ -131,10 +147,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->port;
     }
 
-    public function setPort(int $port): self
+    public function setPort(int $port): void
     {
         $this->port = $port;
-        return $this;
     }
 
     public function getTimeout(): int
@@ -142,10 +157,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->timeout;
     }
 
-    public function setTimeout(int $timeout): self
+    public function setTimeout(int $timeout): void
     {
         $this->timeout = $timeout;
-        return $this;
     }
 
     public function getWeight(): int
@@ -153,10 +167,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->weight;
     }
 
-    public function setWeight(int $weight): self
+    public function setWeight(int $weight): void
     {
         $this->weight = $weight;
-        return $this;
     }
 
     public function getDescription(): ?string
@@ -164,10 +177,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->description;
     }
 
-    public function setDescription(?string $description): self
+    public function setDescription(?string $description): void
     {
         $this->description = $description;
-        return $this;
     }
 
     public function getPattern(): string
@@ -175,10 +187,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->pattern;
     }
 
-    public function setPattern(string $pattern): self
+    public function setPattern(string $pattern): void
     {
         $this->pattern = $pattern;
-        return $this;
     }
 
     public function getStrategy(): MatchStrategy
@@ -186,10 +197,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->strategy;
     }
 
-    public function setStrategy(MatchStrategy $strategy): self
+    public function setStrategy(MatchStrategy $strategy): void
     {
         $this->strategy = $strategy;
-        return $this;
     }
 
     public function isDefault(): bool
@@ -197,21 +207,30 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->isDefault;
     }
 
-    public function setIsDefault(bool $isDefault): self
+    public function getIsDefault(): bool
     {
-        $this->isDefault = $isDefault;
-        return $this;
+        return $this->isDefault;
     }
 
+    public function setIsDefault(bool $isDefault): void
+    {
+        $this->isDefault = $isDefault;
+    }
+
+    /**
+     * @return array<int, string>|null
+     */
     public function getCustomAnswers(): ?array
     {
         return $this->customAnswers;
     }
 
-    public function setCustomAnswers(?array $customAnswers): self
+    /**
+     * @param array<int, string>|null $customAnswers
+     */
+    public function setCustomAnswers(?array $customAnswers): void
     {
         $this->customAnswers = $customAnswers;
-        return $this;
     }
 
     public function getTtl(): int
@@ -219,10 +238,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->ttl;
     }
 
-    public function setTtl(int $ttl): self
+    public function setTtl(int $ttl): void
     {
         $this->ttl = $ttl;
-        return $this;
     }
 
     public function getProtocol(): DnsProtocolEnum
@@ -230,10 +248,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->protocol;
     }
 
-    public function setProtocol(DnsProtocolEnum $protocol): self
+    public function setProtocol(DnsProtocolEnum $protocol): void
     {
         $this->protocol = $protocol;
-        return $this;
     }
 
     public function getCertPath(): ?string
@@ -241,10 +258,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->certPath;
     }
 
-    public function setCertPath(?string $certPath): self
+    public function setCertPath(?string $certPath): void
     {
         $this->certPath = $certPath;
-        return $this;
     }
 
     public function getKeyPath(): ?string
@@ -252,10 +268,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->keyPath;
     }
 
-    public function setKeyPath(?string $keyPath): self
+    public function setKeyPath(?string $keyPath): void
     {
         $this->keyPath = $keyPath;
-        return $this;
     }
 
     public function isVerifyCert(): bool
@@ -263,10 +278,9 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->verifyCert;
     }
 
-    public function setVerifyCert(bool $verifyCert): self
+    public function setVerifyCert(bool $verifyCert): void
     {
         $this->verifyCert = $verifyCert;
-        return $this;
     }
 
     public function isValid(): ?bool
@@ -274,40 +288,16 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         return $this->valid;
     }
 
-    public function setValid(?bool $valid): self
+    public function setValid(?bool $valid): void
     {
         $this->valid = $valid;
-
-        return $this;
-    }
-
-
-    public function setCreatedFromIp(?string $createdFromIp): self
-    {
-        $this->createdFromIp = $createdFromIp;
-
-        return $this;
-    }
-
-    public function getCreatedFromIp(): ?string
-    {
-        return $this->createdFromIp;
-    }
-
-    public function setUpdatedFromIp(?string $updatedFromIp): self
-    {
-        $this->updatedFromIp = $updatedFromIp;
-
-        return $this;
-    }
-
-    public function getUpdatedFromIp(): ?string
-    {
-        return $this->updatedFromIp;
     }
 
     /**
      * 返回时间戳相关的数组
+     */
+    /**
+     * @return array<string, mixed>
      */
     private function retrieveTimestampArray(): array
     {
@@ -317,25 +307,28 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function retrievePlainArray(): array
     {
         return [
             'id' => $this->getId(),
-            'name' => $this->name,
-            'host' => $this->host,
-            'port' => $this->port,
-            'timeout' => $this->timeout,
-            'weight' => $this->weight,
+            'name' => $this->name ?? null,
+            'host' => $this->host ?? null,
+            'port' => $this->port ?? null,
+            'timeout' => $this->timeout ?? null,
+            'weight' => $this->weight ?? null,
             'description' => $this->description,
-            'pattern' => $this->pattern,
+            'pattern' => $this->pattern ?? null,
             'strategy' => $this->strategy->value,
-            'isDefault' => $this->isDefault,
+            'isDefault' => $this->isDefault ?? false,
             'customAnswers' => $this->customAnswers,
-            'ttl' => $this->ttl,
+            'ttl' => $this->ttl ?? null,
             'protocol' => $this->protocol->value,
             'certPath' => $this->certPath,
             'keyPath' => $this->keyPath,
-            'verifyCert' => $this->verifyCert,
+            'verifyCert' => $this->verifyCert ?? true,
             'valid' => $this->isValid(),
             'createdBy' => $this->getCreatedBy(),
             'updatedBy' => $this->getUpdatedBy(),
@@ -343,11 +336,17 @@ class UpstreamDnsServer implements PlainArrayInterface, ApiArrayInterface, Admin
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function retrieveApiArray(): array
     {
         return $this->retrievePlainArray();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function retrieveAdminArray(): array
     {
         return $this->retrieveApiArray();

@@ -26,6 +26,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * IPv4 地址记录
      * 将域名映射到 IPv4 地址
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.4.1
      */
     case A = 1;
@@ -33,6 +34,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 名称服务器记录
      * 指定域的权威名称服务器
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.11
      */
     case NS = 2;
@@ -40,6 +42,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 规范名称记录
      * 创建域名别名，将一个域名指向另一个域名
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.1
      */
     case CNAME = 5;
@@ -47,6 +50,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 权威记录起始
      * 指定区域的权威信息，包含主域名服务器、管理员、序列号等
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.13
      */
     case SOA = 6;
@@ -54,6 +58,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 指针记录
      * 用于反向DNS查找，将IP地址映射到域名
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.12
      */
     case PTR = 12;
@@ -61,6 +66,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 邮件交换记录
      * 指定负责接收邮件的服务器
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.9
      */
     case MX = 15;
@@ -68,6 +74,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 文本记录
      * 存储文本信息，通常用于SPF、DKIM等
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.14
      */
     case TXT = 16;
@@ -75,6 +82,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * IPv6 地址记录
      * 将域名映射到 IPv6 地址
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc3596#section-2.1
      */
     case AAAA = 28;
@@ -82,6 +90,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 服务定位记录
      * 用于定义服务的位置，包括主机名、端口等
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2782
      */
     case SRV = 33;
@@ -89,6 +98,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 命名权威指针
      * 用于服务发现和URI映射
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc2915
      */
     case NAPTR = 35;
@@ -96,6 +106,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * EDNS0 选项
      * 扩展DNS消息大小限制等功能
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc6891
      */
     case OPT = 41;
@@ -103,6 +114,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 委托签名者
      * DNSSEC中用于验证区域委托的安全性
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc4034#section-5
      */
     case DS = 43;
@@ -110,6 +122,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * DNSSEC 签名
      * 包含资源记录集的数字签名
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc4034#section-3
      */
     case RRSIG = 46;
@@ -117,6 +130,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 下一个安全记录
      * DNSSEC中用于证明记录不存在
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc4034#section-4
      */
     case NSEC = 47;
@@ -124,6 +138,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * DNS 密钥记录
      * 存储用于DNSSEC的公钥
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc4034#section-2
      */
     case DNSKEY = 48;
@@ -131,6 +146,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * NSEC 版本 3
      * NSEC的改进版本，提供更好的隐私保护
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc5155
      */
     case NSEC3 = 50;
@@ -138,6 +154,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * NSEC3 参数
      * 定义NSEC3记录的创建参数
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc5155
      */
     case NSEC3PARAM = 51;
@@ -145,6 +162,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * DANE TLSA 记录
      * 用于在DNS中发布TLS证书信息
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc6698
      */
     case TLSA = 52;
@@ -152,6 +170,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 证书颁发机构授权
      * 指定哪些CA被授权为域名颁发证书
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc6844
      */
     case CAA = 257;
@@ -159,6 +178,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 域名别名
      * 创建域名别名，将一个域名指向另一个域名
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.1
      */
     case DNAME = 39;
@@ -166,6 +186,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 请求区域传输
      * 请求区域传输
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.3
      */
     case AXFR = 252;
@@ -173,6 +194,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
     /**
      * 请求所有记录
      * 请求所有记录
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-3.2.3
      */
     case ANY = 255;
@@ -184,7 +206,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
      */
     public function getName(): string
     {
-        return match($this) {
+        return match ($this) {
             self::A => 'A',
             self::NS => 'NS',
             self::CNAME => 'CNAME',
@@ -215,7 +237,7 @@ enum RecordType: int implements Itemable, Labelable, Selectable
      */
     public static function fromName(string $name): ?self
     {
-        return match(strtoupper($name)) {
+        return match (strtoupper($name)) {
             'A' => self::A,
             'NS' => self::NS,
             'CNAME' => self::CNAME,

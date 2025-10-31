@@ -1,0 +1,4 @@
+services:
+    DnsServerBundle\DataFixtures\:
+        resource: '../../DataFixtures'
+        tags: ['doctrine.fixture.orm']

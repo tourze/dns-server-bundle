@@ -24,6 +24,7 @@ enum QueryMode: string implements Itemable, Labelable, Selectable
      * 递归查询
      * DNS服务器会代表客户端完成整个解析过程，直到获得最终结果
      * 适用于客户端请求，如本地DNS服务器为用户提供服务
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1035#section-4.3.2
      */
     case RECURSIVE = 'recursive';
@@ -32,6 +33,7 @@ enum QueryMode: string implements Itemable, Labelable, Selectable
      * 迭代查询
      * DNS服务器返回最接近的下一级nameserver信息，由客户端继续查询
      * 适用于DNS服务器之间的查询
+     *
      * @see https://datatracker.ietf.org/doc/html/rfc1034#section-4.3.1
      */
     case ITERATIVE = 'iterative';
@@ -41,7 +43,7 @@ enum QueryMode: string implements Itemable, Labelable, Selectable
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::RECURSIVE => '递归查询',
             self::ITERATIVE => '迭代查询',
         };
@@ -52,7 +54,7 @@ enum QueryMode: string implements Itemable, Labelable, Selectable
      */
     public function isRecursive(): bool
     {
-        return $this === self::RECURSIVE;
+        return self::RECURSIVE === $this;
     }
 
     /**
@@ -60,7 +62,7 @@ enum QueryMode: string implements Itemable, Labelable, Selectable
      */
     public function isIterative(): bool
     {
-        return $this === self::ITERATIVE;
+        return self::ITERATIVE === $this;
     }
 
     /**

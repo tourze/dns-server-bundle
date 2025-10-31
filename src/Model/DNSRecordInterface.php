@@ -4,6 +4,9 @@ namespace DnsServerBundle\Model;
 
 use Tourze\Arrayable\Arrayable;
 
+/**
+ * @extends Arrayable<string, mixed>
+ */
 interface DNSRecordInterface extends Arrayable, Serializable
 {
     public function getType(): DNSRecordType;
@@ -18,7 +21,7 @@ interface DNSRecordInterface extends Arrayable, Serializable
 
     public function getData(): ?DataAbstract;
 
-    public function setTTL(int $ttl): DNSRecordInterface;
+    public function setTTL(int $ttl): void;
 
     public function toArray(): array;
 

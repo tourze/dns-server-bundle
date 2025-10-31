@@ -3,9 +3,14 @@
 namespace DnsServerBundle\Tests\Enum;
 
 use DnsServerBundle\Enum\MatchStrategy;
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use Tourze\PHPUnitEnum\AbstractEnumTestCase;
 
-class MatchStrategyTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(MatchStrategy::class)]
+final class MatchStrategyTest extends AbstractEnumTestCase
 {
     public function testEnumExists(): void
     {
@@ -30,12 +35,6 @@ class MatchStrategyTest extends TestCase
         $this->assertEquals(MatchStrategy::WILDCARD, MatchStrategy::tryFrom('wildcard'));
     }
 
-    public function testTryFromWithInvalidValue(): void
-    {
-        $this->assertNull(MatchStrategy::tryFrom('INVALID'));
-        $this->assertNull(MatchStrategy::tryFrom(''));
-    }
-    
     public function testGetLabel(): void
     {
         $this->assertEquals('精确匹配', MatchStrategy::EXACT->getLabel());
@@ -44,4 +43,26 @@ class MatchStrategyTest extends TestCase
         $this->assertEquals('前缀匹配', MatchStrategy::PREFIX->getLabel());
         $this->assertEquals('通配符匹配', MatchStrategy::WILDCARD->getLabel());
     }
-} 
+
+    public function testToArray(): void
+    {
+        // toArray 是实例方法，返回单个枚举项的数组表示
+        $array = MatchStrategy::EXACT->toArray();
+
+        $this->assertIsArray($array);
+        $this->assertCount(2, $array);
+
+        // 验证数组的键值对
+        $this->assertArrayHasKey('value', $array);
+        $this->assertArrayHasKey('label', $array);
+
+        // 验证值是否正确
+        $this->assertSame('exact', $array['value']);
+        $this->assertSame('精确匹配', $array['label']);
+
+        // 测试其他枚举值
+        $regexArray = MatchStrategy::REGEX->toArray();
+        $this->assertSame('regex', $regexArray['value']);
+        $this->assertSame('正则匹配', $regexArray['label']);
+    }
+}

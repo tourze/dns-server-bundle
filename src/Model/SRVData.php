@@ -37,17 +37,23 @@ final class SRVData extends DataAbstract implements \Stringable
     {
         return [
             'priority' => $this->priority,
-            'weight'  => $this->weight,
-            'port'    => $this->port,
-            'target' => (string)$this->target,
+            'weight' => $this->weight,
+            'port' => $this->port,
+            'target' => (string) $this->target,
         ];
     }
 
+    /** @param array<string, mixed> $unserialized */
     public function __unserialize(array $unserialized): void
     {
-        $this->priority = $unserialized['priority'];
-        $this->weight = $unserialized['weight'];
-        $this->port = $unserialized['port'];
-        $this->target = new Hostname($unserialized['target']);
+        $rawPriority = $unserialized['priority'] ?? 0;
+        $rawWeight = $unserialized['weight'] ?? 0;
+        $rawPort = $unserialized['port'] ?? 0;
+        $rawTarget = $unserialized['target'] ?? '';
+
+        $this->priority = is_int($rawPriority) ? $rawPriority : (is_numeric($rawPriority) ? (int) $rawPriority : 0);
+        $this->weight = is_int($rawWeight) ? $rawWeight : (is_numeric($rawWeight) ? (int) $rawWeight : 0);
+        $this->port = is_int($rawPort) ? $rawPort : (is_numeric($rawPort) ? (int) $rawPort : 0);
+        $this->target = new Hostname(is_string($rawTarget) ? $rawTarget : '');
     }
 }

@@ -25,8 +25,10 @@ final class TXTData extends DataAbstract implements \Stringable
         ];
     }
 
+    /** @param array<string, mixed> $unserialized */
     public function __unserialize(array $unserialized): void
     {
-        $this->value = $unserialized['value'];
+        $rawValue = $unserialized['value'] ?? '';
+        $this->value = is_string($rawValue) ? $rawValue : '';
     }
 }

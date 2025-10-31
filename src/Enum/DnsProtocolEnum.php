@@ -22,9 +22,9 @@ enum DnsProtocolEnum: string implements Labelable, Itemable, Selectable
 
     public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             self::UDP => 'UDP',
-            self::TCP => 'TCP', 
+            self::TCP => 'TCP',
             self::DOH => 'DNS over HTTPS',
             self::DOT => 'DNS over TLS',
         };
